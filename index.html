@@ -323,6 +323,10 @@
     font-size: clamp(1rem,1.8vw,1.2rem); color: rgba(247,241,231,0.9);
     max-width:480px; line-height:1.45;
   }
+  #motivational-text{
+    outline:none; border-bottom:1px dashed transparent; padding-bottom:1px;
+  }
+  #motivational-text:focus{ border-bottom-color: rgba(247,241,231,0.55); }
 
   .week-strip{
     display:flex; gap:10px; overflow-x:auto;
@@ -786,6 +790,51 @@
   body.viewer-mode .recipe-occ-tag{ pointer-events:none; cursor:default; }
   .recipe-occ-empty{ font-size:0.82rem; color:var(--ink-soft); font-style:italic; }
 
+  .occ-manage{
+    font-size:0.82rem; opacity:0.75; cursor:pointer; line-height:1;
+  }
+  .occ-manage:hover{ opacity:1; }
+
+  .occasion-picker-overlay{
+    position:fixed; inset:0; background:rgba(28,22,18,0.6);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:200; backdrop-filter: blur(2px);
+  }
+  .occasion-picker-panel{
+    background: var(--card, #fff); width:100%; max-width:560px;
+    max-height:80vh; border-radius:20px 20px 0 0; overflow:hidden;
+    display:flex; flex-direction:column;
+    box-shadow: 0 -14px 40px rgba(0,0,0,0.35);
+  }
+  @media (min-width: 720px){
+    .occasion-picker-overlay{ align-items:center; }
+    .occasion-picker-panel{ border-radius:16px; max-height:75vh; }
+  }
+  .occ-picker-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px 4px;
+  }
+  .occ-picker-header h3{
+    font-family: var(--font-serif); font-size:1.05rem; color: var(--espresso);
+    margin:0; padding-right:12px;
+  }
+  .occ-picker-close{
+    font-size:1.4rem; line-height:1; cursor:pointer; color: var(--ink-soft);
+    padding:2px 8px;
+  }
+  .occasion-picker-panel .panel-sub{ padding:0 20px; margin:0 0 10px; }
+  .occ-picker-body{ overflow-y:auto; padding:0 20px 20px; }
+  .occ-picker-group h4{
+    font-family: var(--font-serif); font-size:0.9rem; color: var(--espresso);
+    margin:16px 0 8px; padding-bottom:4px; border-bottom:1px solid var(--hairline);
+  }
+  .occ-picker-group:first-child h4{ margin-top:0; }
+  .occ-picker-row{
+    display:flex; align-items:center; gap:10px; padding:8px 2px;
+    font-size:0.88rem; color: var(--ink);
+  }
+  .occ-picker-row input{ width:18px; height:18px; flex-shrink:0; }
+
   .ingredient-row{
     display:flex; align-items:center; gap:10px; padding:10px 0;
     border-bottom:1px solid var(--hairline); font-size:0.9rem;
@@ -909,7 +958,8 @@
     text-decoration:underline; opacity:0.75;
   }
   body.viewer-mode .book-pdf-btn,
-  body.viewer-mode .book-pdf-remove{
+  body.viewer-mode .book-pdf-remove,
+  body.viewer-mode .occ-manage{
     display:none !important;
   }
 
@@ -1117,7 +1167,7 @@
         <div class="hero-card-inner">
           <span class="hero-eyebrow" id="hero-eyebrow" contenteditable="true" data-tkey="hero-eyebrow-text">Tu espacio DVOLVE</span>
           <h1 id="dashboard-greeting">Hola</h1>
-          <p class="hero-line" id="dashboard-motivational">"El progreso no se mide en un día, se construye en cada sesión que elegís mostrarte."</p>
+          <p class="hero-line" id="dashboard-motivational">"<span id="motivational-text" contenteditable="true">El progreso no se mide en un día, se construye en cada sesión que elegís mostrarte.</span>"</p>
         </div>
       </div>
 
@@ -1298,10 +1348,10 @@
       </div>
 
       <div class="admin-tabs" id="recipe-tabs">
-        <button class="admin-tab active" data-rcat="dulces">🍰 <span class="rcat-label" data-catkey="dulces" contenteditable="true">Dulces</span></button>
-        <button class="admin-tab" data-rcat="almuerzos">🍽️ <span class="rcat-label" data-catkey="almuerzos" contenteditable="true">Almuerzos</span></button>
-        <button class="admin-tab" data-rcat="bebidas">🥤 <span class="rcat-label" data-catkey="bebidas" contenteditable="true">Bebidas</span></button>
-        <button class="admin-tab" data-rcat="meriendas">🥪 <span class="rcat-label" data-catkey="meriendas" contenteditable="true">Meriendas</span></button>
+        <button class="admin-tab active" data-rcat="dulces"><span class="rcat-label" data-catkey="dulces" contenteditable="true">🍰 Dulces</span></button>
+        <button class="admin-tab" data-rcat="almuerzos"><span class="rcat-label" data-catkey="almuerzos" contenteditable="true">🍽️ Almuerzos</span></button>
+        <button class="admin-tab" data-rcat="bebidas"><span class="rcat-label" data-catkey="bebidas" contenteditable="true">🥤 Bebidas</span></button>
+        <button class="admin-tab" data-rcat="meriendas"><span class="rcat-label" data-catkey="meriendas" contenteditable="true">🥪 Meriendas</span></button>
       </div>
 
       <p class="panel-sub" id="occasion-filters-label">Filtrar por ocasión:</p>
@@ -2281,7 +2331,7 @@
       { title:'Estiramiento de cuádriceps', desc:'Parada, llevá el talón hacia el glúteo sosteniendo el tobillo, rodillas juntas.' },
       { title:'Gato-vaca (espalda)', desc:'En cuatro apoyos, alterná arquear y redondear la espalda acompañando la respiración.' }
     ],
-    recipeCatLabels: { dulces:'Dulces', almuerzos:'Almuerzos', bebidas:'Bebidas', meriendas:'Meriendas' },
+    recipeCatLabels: { dulces:'🍰 Dulces', almuerzos:'🍽️ Almuerzos', bebidas:'🥤 Bebidas', meriendas:'🥪 Meriendas' },
     occasions: ['Juntada con amigos'],
     recipeBook: {
       dulces: [
@@ -2489,7 +2539,19 @@
     document.getElementById('dashboard-avatar').textContent = currentUserName.charAt(0).toUpperCase();
     const sidebarSessionName = document.getElementById('sidebar-session-name');
     if(sidebarSessionName) sidebarSessionName.textContent = currentUserName;
-    document.getElementById('dashboard-motivational').textContent = `"${STATE.brand.motivational}"`;
+    document.getElementById('motivational-text').textContent = STATE.brand.motivational;
+    const motivationalEl = document.getElementById('motivational-text');
+    if(motivationalEl && !motivationalEl.dataset.boundBlur){
+      motivationalEl.dataset.boundBlur = '1';
+      motivationalEl.addEventListener('blur', () => {
+        const val = motivationalEl.textContent.trim();
+        if(!val){ motivationalEl.textContent = STATE.brand.motivational; return; }
+        STATE.brand.motivational = val;
+        const settingsField = document.getElementById('brand-motivational');
+        if(settingsField) settingsField.value = val;
+        saveState();
+      });
+    }
     const progDesc = document.getElementById('program-description');
     if(progDesc) progDesc.textContent = STATE.brand.programDescription || '';
     // Brand form fields
@@ -4407,7 +4469,7 @@
 
   // Nombres de las categorías (Dulces/Almuerzos/Bebidas/Meriendas): editables por la coach
   function renderCategoryLabels(){
-    if(!STATE.recipeCatLabels) STATE.recipeCatLabels = { dulces:'Dulces', almuerzos:'Almuerzos', bebidas:'Bebidas', meriendas:'Meriendas' };
+    if(!STATE.recipeCatLabels) STATE.recipeCatLabels = { dulces:'🍰 Dulces', almuerzos:'🍽️ Almuerzos', bebidas:'🥤 Bebidas', meriendas:'🥪 Meriendas' };
     document.querySelectorAll('#recipe-tabs .rcat-label').forEach(el => {
       const key = el.dataset.catkey;
       el.textContent = STATE.recipeCatLabels[key] || el.textContent;
@@ -4445,14 +4507,21 @@
       chip.className = 'occasion-chip' + (currentOccasionFilter === name ? ' active' : '');
       chip.innerHTML = `
         <span class="occ-label" contenteditable="true">${name}</span>
+        <span class="occ-manage" title="Elegir recetas">📁</span>
         <span class="book-remove">×</span>
       `;
       chip.addEventListener('click', (e) => {
         if(e.target.closest('.book-remove')) return;
+        if(e.target.closest('.occ-manage')) return;
         if(document.activeElement === chip.querySelector('.occ-label')) return;
         currentOccasionFilter = STATE.occasions[idx];
         renderOccasionFilters();
         renderRecipeGrid();
+      });
+      chip.querySelector('.occ-manage').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if(currentRole !== 'coach') return;
+        openOccasionRecipePicker(STATE.occasions[idx]);
       });
       const labelEl = chip.querySelector('.occ-label');
       labelEl.addEventListener('blur', () => {
@@ -4488,6 +4557,68 @@
         renderRecipeGrid();
       });
       wrap.appendChild(chip);
+    });
+  }
+
+  // Panel "carpeta": la coach elige qué recetas ya cargadas van en una ocasión.
+  function openOccasionRecipePicker(occasionName){
+    const existing = document.getElementById('occasion-picker-overlay');
+    if(existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'occasion-picker-overlay';
+    overlay.className = 'occasion-picker-overlay';
+
+    const catOrder = ['dulces','almuerzos','bebidas','meriendas'];
+    let bodyHtml = '';
+    catOrder.forEach(cat => {
+      const recipes = STATE.recipeBook[cat] || [];
+      if(!recipes.length) return;
+      const catLabel = (STATE.recipeCatLabels && STATE.recipeCatLabels[cat]) || cat;
+      bodyHtml += `<div class="occ-picker-group"><h4>${catLabel}</h4>`;
+      recipes.forEach((recipe, idx) => {
+        const checked = Array.isArray(recipe.occasions) && recipe.occasions.includes(occasionName);
+        bodyHtml += `
+          <label class="occ-picker-row">
+            <input type="checkbox" data-cat="${cat}" data-idx="${idx}" ${checked ? 'checked' : ''}>
+            <span>${recipe.title || 'Receta sin título'}</span>
+          </label>`;
+      });
+      bodyHtml += `</div>`;
+    });
+    if(!bodyHtml){
+      bodyHtml = '<p class="recipe-occ-empty">Todavía no cargaste recetas. Agregalas primero desde Recetarios.</p>';
+    }
+
+    overlay.innerHTML = `
+      <div class="occasion-picker-panel">
+        <div class="occ-picker-header">
+          <h3>Recetas para "${occasionName}"</h3>
+          <span class="occ-picker-close">×</span>
+        </div>
+        <p class="panel-sub">Marcá las recetas que sirven para esta ocasión.</p>
+        <div class="occ-picker-body">${bodyHtml}</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.occ-picker-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+
+    overlay.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const cat = cb.dataset.cat;
+        const idx = Number(cb.dataset.idx);
+        const recipe = STATE.recipeBook[cat][idx];
+        if(!Array.isArray(recipe.occasions)) recipe.occasions = [];
+        if(cb.checked){
+          if(!recipe.occasions.includes(occasionName)) recipe.occasions.push(occasionName);
+        }else{
+          recipe.occasions = recipe.occasions.filter(o => o !== occasionName);
+        }
+        saveState();
+        if(currentOccasionFilter === occasionName) renderRecipeGrid();
+      });
     });
   }
 
