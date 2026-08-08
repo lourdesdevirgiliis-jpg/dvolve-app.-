@@ -1317,17 +1317,15 @@
       </div>
 
       <div class="panel">
-        <h2>Plan nutricional</h2>
-        <p class="panel-sub">Subí acá el plan en PDF, o una foto o video si preferís.</p>
+        <h2>Plan de alimentación</h2>
+        <p class="panel-sub">Tu plan, armado por tu coach.</p>
         <div id="nutrition-plan-list"></div>
-        <button class="add-exercise-btn" id="add-nutrition-plan-btn">+ Agregar archivo del plan</button>
       </div>
 
       <div class="panel">
         <h2 data-tkey="shopping-heading" contenteditable="true">Lista de compras</h2>
-        <p class="panel-sub" data-tkey="shopping-sub" contenteditable="true">Organizada por grupo — separá lo que necesites.</p>
+        <p class="panel-sub" data-tkey="shopping-sub" contenteditable="true">Organizada por grupo — marcá lo que ya compraste.</p>
         <div id="shopping-categories"></div>
-        <button class="add-exercise-btn" id="add-shopping-category-btn">+ Agregar grupo</button>
         <p id="shopping-status" style="font-size:0.78rem;color:var(--ink-soft);margin-top:10px;"></p>
       </div>
     </section>
@@ -1523,6 +1521,7 @@
       <div class="admin-tabs">
         <button class="admin-tab active" data-admin="usuarios">Usuarios</button>
         <button class="admin-tab" data-admin="datos">Datos de alumnas</button>
+        <button class="admin-tab" data-admin="nutricion">Nutrición</button>
         <button class="admin-tab" data-admin="marca">Marca</button>
         <button class="admin-tab" data-admin="contenido">Entrenamientos</button>
         <button class="admin-tab" data-admin="multimedia">Multimedia</button>
@@ -1658,6 +1657,32 @@
           <h2>Registro de peso y sensaciones</h2>
           <p class="panel-sub">Lo que la alumna va escribiendo cada vez que registra su peso — así seguís su evolución mes a mes.</p>
           <div id="admin-feeling-log-list"></div>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="admin-nutricion" style="display:none">
+        <div class="panel">
+          <h2>Lista de compras y plan de alimentación</h2>
+          <p class="panel-sub">Elegí una alumna para armar SU lista de compras y subirle SU plan en PDF. Cada alumna ve solo lo suyo.</p>
+          <div class="field" style="max-width:340px;">
+            <label for="nutrition-student-select">Alumna</label>
+            <select id="nutrition-student-select" style="width:100%;padding:13px 16px;border-radius:10px;border:1px solid var(--hairline);background:var(--card);font-family:inherit;"></select>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Lista de compras</h2>
+          <p class="panel-sub">Organizada por grupo — solo vos podés editarla.</p>
+          <div id="admin-shopping-categories"></div>
+          <button class="add-exercise-btn" id="admin-add-shopping-category-btn">+ Agregar grupo</button>
+          <p id="admin-shopping-status" style="font-size:0.78rem;color:var(--ink-soft);margin-top:10px;"></p>
+        </div>
+
+        <div class="panel">
+          <h2>Plan de alimentación</h2>
+          <p class="panel-sub">Subí el PDF (o foto/video) con el plan de esta alumna.</p>
+          <div id="admin-nutrition-plan-list"></div>
+          <button class="add-exercise-btn" id="admin-add-nutrition-plan-btn">+ Agregar archivo</button>
         </div>
       </div>
 
@@ -2298,6 +2323,8 @@
       bio: 'Contá acá quién arma los planes de nutrición: formación, experiencia y enfoque de trabajo.'
     },
     studentProfiles: {},
+    studentShoppingLists: {},
+    studentNutritionFiles: {},
     flyerPages: [
       {
         title: 'Antojos y emergencias',
@@ -2559,10 +2586,10 @@
     document.getElementById('brand-motivational').value = STATE.brand.motivational;
 
     // Usuarios reales registrados (se cargan aparte, ver renderRealUsersTable)
-    renderStudentSelect();
+    refreshStudentSelects();
 
-    // Shopping list (por grupos)
-    renderShoppingList();
+    // Shopping list (por alumna)
+    renderShoppingListStudent();
 
     updateProgressStats();
     if(document.getElementById('progreso').classList.contains('active')) drawChart();
@@ -2575,7 +2602,7 @@
     } else {
       loadMyRoutine();
     }
-    renderNutritionPlan();
+    renderNutritionPlanStudent();
     renderNutritionistInfo();
     restoreSectionBanners();
     restoreFlyerImages();
@@ -2674,13 +2701,74 @@
     });
   }
 
-  // ---- Lista de compras por grupos: editable, con checkboxes, y grupos/items ilimitados ----
-  function renderShoppingList(){
+  // ---- Lista de compras por alumna: la alumna la ve y tilda, la coach la arma desde el panel admin ----
+  function renderShoppingListStudent(){
     const container = document.getElementById('shopping-categories');
     if(!container) return;
     container.innerHTML = '';
+    const email = currentUser && currentUser.email;
+    const list = (email && STATE.studentShoppingLists[email]) || [];
 
-    STATE.shoppingList.forEach((cat, catIdx) => {
+    if(list.length === 0){
+      container.innerHTML = '<p class="recipe-occ-empty">Tu coach todavía no armó tu lista de compras.</p>';
+      updateShoppingStatus(list);
+      return;
+    }
+
+    list.forEach((cat) => {
+      const catEl = document.createElement('div');
+      catEl.className = 'shopping-category';
+      catEl.innerHTML = `<div class="shopping-category-header"><span class="shopping-category-name">${cat.name}</span></div>`;
+      const ul = document.createElement('ul');
+      ul.className = 'shopping-list';
+      cat.items.forEach((item, itemIdx) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <input type="checkbox" ${item.checked ? 'checked' : ''}>
+          <span>${item.text}</span>
+        `;
+        ul.appendChild(li);
+        li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+          item.checked = e.target.checked;
+          updateShoppingStatus(list);
+          saveState();
+        });
+      });
+      catEl.appendChild(ul);
+      container.appendChild(catEl);
+    });
+
+    updateShoppingStatus(list);
+  }
+
+  function updateShoppingStatus(list){
+    const statusEl = document.getElementById('shopping-status');
+    if(!statusEl) return;
+    let total = 0, done = 0;
+    (list || []).forEach(cat => {
+      cat.items.forEach(item => {
+        total++;
+        if(item.checked) done++;
+      });
+    });
+    statusEl.textContent = total ? `${done} de ${total} completados — guardado automáticamente.` : '';
+  }
+
+  // ---- Panel admin: la coach arma la lista de compras de la alumna seleccionada ----
+  let nutritionSelectedEmail = '';
+
+  function renderShoppingListAdmin(){
+    const container = document.getElementById('admin-shopping-categories');
+    if(!container) return;
+    container.innerHTML = '';
+    if(!nutritionSelectedEmail){
+      updateAdminShoppingStatus([]);
+      return;
+    }
+    if(!STATE.studentShoppingLists[nutritionSelectedEmail]) STATE.studentShoppingLists[nutritionSelectedEmail] = [];
+    const list = STATE.studentShoppingLists[nutritionSelectedEmail];
+
+    list.forEach((cat, catIdx) => {
       const catEl = document.createElement('div');
       catEl.className = 'shopping-category';
 
@@ -2693,13 +2781,13 @@
       catEl.appendChild(header);
 
       header.querySelector('.shopping-category-name').addEventListener('blur', (e) => {
-        STATE.shoppingList[catIdx].name = e.target.textContent.trim();
+        list[catIdx].name = e.target.textContent.trim();
         saveState();
       });
       header.querySelector('.book-remove').addEventListener('click', () => {
-        STATE.shoppingList.splice(catIdx, 1);
+        list.splice(catIdx, 1);
         saveState();
-        renderShoppingList();
+        renderShoppingListAdmin();
       });
 
       const ul = document.createElement('ul');
@@ -2714,18 +2802,18 @@
         ul.appendChild(li);
 
         li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
-          STATE.shoppingList[catIdx].items[itemIdx].checked = e.target.checked;
-          updateShoppingStatus();
+          list[catIdx].items[itemIdx].checked = e.target.checked;
+          updateAdminShoppingStatus(list);
           saveState();
         });
         li.querySelector('span[contenteditable]').addEventListener('blur', (e) => {
-          STATE.shoppingList[catIdx].items[itemIdx].text = e.target.textContent.trim();
+          list[catIdx].items[itemIdx].text = e.target.textContent.trim();
           saveState();
         });
         li.querySelector('.book-remove').addEventListener('click', () => {
-          STATE.shoppingList[catIdx].items.splice(itemIdx, 1);
+          list[catIdx].items.splice(itemIdx, 1);
           saveState();
-          renderShoppingList();
+          renderShoppingListAdmin();
         });
       });
       catEl.appendChild(ul);
@@ -2735,39 +2823,42 @@
       addItemBtn.className = 'add-shopping-item-btn';
       addItemBtn.textContent = '+ Agregar producto';
       addItemBtn.addEventListener('click', () => {
-        STATE.shoppingList[catIdx].items.push({ text:'Nuevo producto', checked:false });
+        list[catIdx].items.push({ text:'Nuevo producto', checked:false });
         saveState();
-        renderShoppingList();
+        renderShoppingListAdmin();
       });
       catEl.appendChild(addItemBtn);
 
       container.appendChild(catEl);
     });
 
-    updateShoppingStatus();
+    updateAdminShoppingStatus(list);
   }
 
-  function updateShoppingStatus(){
-    const statusEl = document.getElementById('shopping-status');
+  function updateAdminShoppingStatus(list){
+    const statusEl = document.getElementById('admin-shopping-status');
     if(!statusEl) return;
     let total = 0, done = 0;
-    STATE.shoppingList.forEach(cat => {
+    (list || []).forEach(cat => {
       cat.items.forEach(item => {
         total++;
         if(item.checked) done++;
       });
     });
-    statusEl.textContent = `${done} de ${total} completados — guardado automáticamente.`;
+    statusEl.textContent = total ? `${done} de ${total} completados por la alumna.` : 'Todavía no armaste ningún grupo para esta alumna.';
   }
 
-  const addShoppingCategoryBtn = document.getElementById('add-shopping-category-btn');
+  const addShoppingCategoryBtn = document.getElementById('admin-add-shopping-category-btn');
   if(addShoppingCategoryBtn){
     addShoppingCategoryBtn.addEventListener('click', () => {
-      STATE.shoppingList.push({ name:'Nuevo grupo', items:[{ text:'Nuevo producto', checked:false }] });
+      if(!nutritionSelectedEmail) return;
+      if(!STATE.studentShoppingLists[nutritionSelectedEmail]) STATE.studentShoppingLists[nutritionSelectedEmail] = [];
+      STATE.studentShoppingLists[nutritionSelectedEmail].push({ name:'Nuevo grupo', items:[{ text:'Nuevo producto', checked:false }] });
       saveState();
-      renderShoppingList();
+      renderShoppingListAdmin();
     });
   }
+
 
   // Weight form → guarda en student_logs, privado por cuenta
   document.getElementById('weight-form').addEventListener('submit', async (e) => {
@@ -2851,6 +2942,7 @@
       document.getElementById('new-user-email').value = '';
       document.getElementById('new-user-password').value = '';
       renderRealUsersTable();
+      refreshStudentSelects();
     }catch(err){
       statusEl.style.color = '#A8446E';
       statusEl.textContent = 'Error inesperado: ' + err.message;
@@ -3738,19 +3830,59 @@
     saveState();
   });
 
-  // ---- Nutrición: archivos del plan (PDF, foto o video) ----
-  function renderNutritionPlan(){
+  // ---- Nutrición: plan de alimentación por alumna (PDF, foto o video) ----
+  function renderNutritionPlanStudent(){
     const list = document.getElementById('nutrition-plan-list');
     if(!list) return;
     list.innerHTML = '';
-    if(!STATE.nutritionPlanFiles) STATE.nutritionPlanFiles = [];
-    if(STATE.nutritionPlanFiles.length === 0){
+    const email = currentUser && currentUser.email;
+    const files = (email && STATE.studentNutritionFiles[email]) || [];
+    if(files.length === 0){
       const msg = document.createElement('p');
       msg.style.cssText = 'color:var(--ink-soft);font-size:0.9rem;padding:6px 0 14px;';
-      msg.textContent = 'Todavía no subiste el plan.';
+      msg.textContent = 'Tu coach todavía no subió tu plan.';
+      list.appendChild(msg);
+      return;
+    }
+    files.forEach((item) => {
+      const card = document.createElement('div');
+      card.className = 'tip-card';
+      card.style.marginBottom = '14px';
+      let preview = '';
+      if(item.url){
+        if(item.type === 'pdf'){
+          preview = `<a class="tip-pdf-chip" href="${item.url}" target="_blank" style="display:inline-block;margin-bottom:10px;">📄 ${item.label || 'Ver plan en PDF'}</a>`;
+        } else if(item.type === 'video'){
+          preview = `<video src="${item.url}" controls style="width:100%;border-radius:12px;margin-bottom:10px;"></video>`;
+        } else {
+          preview = `<img src="${item.url}" alt="" style="width:100%;border-radius:12px;margin-bottom:10px;">`;
+        }
+      }
+      card.innerHTML = `
+        ${preview}
+        <h4 style="margin-top:12px;">${item.title || 'Plan nutricional'}</h4>
+        <p>${item.desc || ''}</p>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  // ---- Panel admin: la coach sube/edita el plan de la alumna seleccionada ----
+  function renderNutritionPlanAdmin(){
+    const list = document.getElementById('admin-nutrition-plan-list');
+    if(!list) return;
+    list.innerHTML = '';
+    if(!nutritionSelectedEmail) return;
+    if(!STATE.studentNutritionFiles[nutritionSelectedEmail]) STATE.studentNutritionFiles[nutritionSelectedEmail] = [];
+    const files = STATE.studentNutritionFiles[nutritionSelectedEmail];
+
+    if(files.length === 0){
+      const msg = document.createElement('p');
+      msg.style.cssText = 'color:var(--ink-soft);font-size:0.9rem;padding:6px 0 14px;';
+      msg.textContent = 'Todavía no le subiste el plan a esta alumna.';
       list.appendChild(msg);
     }
-    STATE.nutritionPlanFiles.forEach((item, idx) => {
+    files.forEach((item, idx) => {
       const card = document.createElement('div');
       card.className = 'tip-card';
       card.style.marginBottom = '14px';
@@ -3777,8 +3909,8 @@
       list.appendChild(card);
 
       const editables = card.querySelectorAll('[contenteditable]');
-      editables[0].addEventListener('blur', (e) => { STATE.nutritionPlanFiles[idx].title = e.target.textContent.trim(); saveState(); });
-      editables[1].addEventListener('blur', (e) => { STATE.nutritionPlanFiles[idx].desc = e.target.textContent.trim(); saveState(); });
+      editables[0].addEventListener('blur', (e) => { files[idx].title = e.target.textContent.trim(); saveState(); });
+      editables[1].addEventListener('blur', (e) => { files[idx].desc = e.target.textContent.trim(); saveState(); });
 
       const box = card.querySelector('.tip-media');
       const input = box.querySelector('input[type="file"]');
@@ -3794,27 +3926,86 @@
         let type = 'image';
         if(file.type === 'application/pdf') type = 'pdf';
         else if(file.type.startsWith('video/')) type = 'video';
-        STATE.nutritionPlanFiles[idx].url = url;
-        STATE.nutritionPlanFiles[idx].type = type;
-        STATE.nutritionPlanFiles[idx].label = file.name;
+        files[idx].url = url;
+        files[idx].type = type;
+        files[idx].label = file.name;
         saveState();
-        renderNutritionPlan();
+        renderNutritionPlanAdmin();
       });
 
       card.querySelector('.book-remove').addEventListener('click', () => {
-        STATE.nutritionPlanFiles.splice(idx, 1);
+        files.splice(idx, 1);
         saveState();
-        renderNutritionPlan();
+        renderNutritionPlanAdmin();
       });
     });
   }
 
-  document.getElementById('add-nutrition-plan-btn').addEventListener('click', () => {
-    if(!STATE.nutritionPlanFiles) STATE.nutritionPlanFiles = [];
-    STATE.nutritionPlanFiles.push({ title:'Plan nutricional', desc:'Descripción breve del plan.', url:null, type:null });
-    saveState();
-    renderNutritionPlan();
-  });
+  const addNutritionPlanBtn = document.getElementById('admin-add-nutrition-plan-btn');
+  if(addNutritionPlanBtn){
+    addNutritionPlanBtn.addEventListener('click', () => {
+      if(!nutritionSelectedEmail) return;
+      if(!STATE.studentNutritionFiles[nutritionSelectedEmail]) STATE.studentNutritionFiles[nutritionSelectedEmail] = [];
+      STATE.studentNutritionFiles[nutritionSelectedEmail].push({ title:'Plan nutricional', desc:'Descripción breve del plan.', url:null, type:null });
+      saveState();
+      renderNutritionPlanAdmin();
+    });
+  }
+
+  // ---- Alumnas reales: se piden a Supabase (no a STATE), así "Datos de alumnas" y ----
+  // "Nutrición" muestran a las alumnas de verdad, no solo las 2 de ejemplo ----
+  let cachedRealStudents = [];
+  async function fetchRealStudents(){
+    try{
+      const { data, error } = await sb.from('profiles').select('id,name,email,role').eq('role','alumna').order('name');
+      if(error) throw error;
+      cachedRealStudents = data || [];
+    }catch(err){
+      cachedRealStudents = [];
+    }
+    return cachedRealStudents;
+  }
+
+  function fillStudentSelect(select, students, onPick){
+    if(!select) return;
+    const prevValue = select.value;
+    select.innerHTML = '';
+    students.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.email;
+      opt.textContent = u.name || u.email;
+      select.appendChild(opt);
+    });
+    if(students.length === 0){
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Todavía no hay alumnas registradas';
+      select.appendChild(opt);
+    }
+    if(students.some(u => u.email === prevValue)){
+      select.value = prevValue;
+    }
+    if(select.value) onPick(select.value);
+  }
+
+  async function refreshStudentSelects(){
+    const students = await fetchRealStudents();
+    fillStudentSelect(document.getElementById('student-select'), students, loadStudentProfile);
+    fillStudentSelect(document.getElementById('nutrition-student-select'), students, (email) => {
+      nutritionSelectedEmail = email;
+      renderShoppingListAdmin();
+      renderNutritionPlanAdmin();
+    });
+  }
+
+  const nutritionStudentSelect = document.getElementById('nutrition-student-select');
+  if(nutritionStudentSelect){
+    nutritionStudentSelect.addEventListener('change', () => {
+      nutritionSelectedEmail = nutritionStudentSelect.value;
+      renderShoppingListAdmin();
+      renderNutritionPlanAdmin();
+    });
+  }
 
 
   // ---- Coaching: e-books, videos, podcast, material ----
@@ -4410,23 +4601,6 @@
       anamnesis: { patologias:'', lesiones:'', medicacion:'', alergias:'', actividadPrevia:'', sueno:'', estres:'', observaciones:'' },
       objetivos: { principal:'', plazo:'', notas:'' }
     };
-  }
-
-  function renderStudentSelect(){
-    const select = document.getElementById('student-select');
-    if(!select) return;
-    const prevValue = select.value;
-    select.innerHTML = '';
-    STATE.users.forEach(u => {
-      const opt = document.createElement('option');
-      opt.value = u.email;
-      opt.textContent = `${u.name} (${u.role})`;
-      select.appendChild(opt);
-    });
-    if(STATE.users.some(u => u.email === prevValue)){
-      select.value = prevValue;
-    }
-    if(select.value) loadStudentProfile(select.value);
   }
 
   function loadStudentProfile(email){
