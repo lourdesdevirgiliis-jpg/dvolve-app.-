@@ -393,14 +393,14 @@
   .photo-composer-top, .photo-composer-bottom{
     position:relative; z-index:2; padding:22px 22px 0;
   }
-  .photo-composer-bottom{ padding:0 22px 22px; }
+  .photo-composer-bottom{ padding:0 22px 56px; }
   .photo-composer-close{
     position:absolute; top:14px; right:16px; z-index:3; color:#fff; font-size:1.5rem; line-height:1;
   }
   .pc-brand{
     color:#fff; font-family: var(--font-serif); font-weight:700; font-size:1.5rem;
-    text-align:center; outline:none; border-bottom:1px dashed transparent;
-    display:block; width:100%; margin-top:14px; letter-spacing:0.01em;
+    text-align:left; outline:none; border-bottom:1px dashed transparent;
+    display:block; width:100%; margin-top:52px; letter-spacing:0.01em;
   }
   .pc-brand:focus{ border-bottom-color: rgba(255,255,255,0.5); }
   .pc-title{
@@ -408,21 +408,25 @@
     border-bottom:1px dashed transparent; display:inline-block;
   }
   .pc-title:focus{ border-bottom-color: rgba(255,255,255,0.5); }
-  .pc-plate-row{ display:flex; align-items:center; gap:8px; justify-content:center; margin-top:10px; }
+  .pc-plate-row{ display:flex; align-items:center; gap:8px; justify-content:flex-start; margin-top:10px; }
   .pc-plate-icon{ width:26px; height:26px; color:#fff; flex-shrink:0; }
-  .pc-muscle-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; justify-content:center; }
+  .pc-icon-emoji{
+    font-size:1.5rem; line-height:1; flex-shrink:0;
+    filter: grayscale(1) brightness(0) invert(1);
+  }
+  .pc-muscle-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; justify-content:flex-start; }
   .pc-muscle-chip{
     padding:6px 13px; border-radius:999px; font-size:0.74rem; color:#fff;
     border:1px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.08);
   }
   .pc-muscle-chip.selected{ background:#fff; color:var(--espresso); border-color:#fff; }
   .pc-phrase{
-    color:#fff; font-family:'Helvetica Neue', Arial, sans-serif; font-weight:700; font-size:1rem;
-    outline:none; border-bottom:1px dashed transparent; display:block; margin-bottom:8px; line-height:1.4;
+    color:#fff; font-family:'Helvetica Neue', Arial, sans-serif; font-weight:700; font-size:1.55rem;
+    outline:none; border-bottom:1px dashed transparent; display:block; margin-bottom:10px; line-height:1.32;
     white-space:normal; word-wrap:break-word; text-align:left;
   }
   .pc-phrase:focus{ border-bottom-color: rgba(255,255,255,0.5); }
-  .pc-date{ color: rgba(255,255,255,0.85); font-size:0.76rem; letter-spacing:0.04em; }
+  .pc-date{ color: rgba(255,255,255,0.85); font-size:0.76rem; letter-spacing:0.04em; display:block; text-align:left; }
   .photo-composer-download{
     margin-top:18px; width:100%; padding:15px; border-radius:12px;
     background:#F7F1E7; color: var(--espresso); font-family: var(--font-serif); font-size:0.95rem;
@@ -2040,13 +2044,14 @@
     overlay.id = 'photo-composer-overlay';
 
     const muscleChipsHtml = isTraining
-      ? `<div class="pc-muscle-chips">${PROGRESS_MUSCLES.map(m => `<span class="pc-muscle-chip${m===progressPhotoMuscle ? ' selected':''}" data-muscle="${m}">${m}</span>`).join('')}</div>`
+      ? `<div class="pc-plate-row"><span class="pc-icon-emoji">🏋️</span></div>
+         <div class="pc-muscle-chips">${PROGRESS_MUSCLES.map(m => `<span class="pc-muscle-chip${m===progressPhotoMuscle ? ' selected':''}" data-muscle="${m}">${m}</span>`).join('')}</div>`
       : '';
 
     const secondaryHtml = isTraining
       ? muscleChipsHtml
       : `<div class="pc-plate-row">
-           <svg class="pc-plate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/></svg>
+           <span class="pc-icon-emoji">🍽️</span>
            <span class="pc-title" contenteditable="true" id="pc-title-el">${STATE.progressPhoto.nutritionTitle}</span>
          </div>`;
 
@@ -2066,7 +2071,7 @@
           </div>
         </div>
         <button type="button" class="photo-composer-download" id="pc-download-btn">⬇ Descargar foto</button>
-        <p class="photo-composer-hint">En iPhone puede abrirse en una pestaña nueva: mantené presionada la imagen y elegí "Guardar imagen".</p>
+        <p class="photo-composer-hint">Al tocar "Descargar foto" se abre el menú para compartir: elegí "Guardar imagen" y queda en el rollo de fotos del celular.</p>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -2130,16 +2135,28 @@
   }
 
   function downloadComposedPhoto(dataUrl, isTraining){
-    const img = new Image();
-    img.onload = () => {
+    // Usamos la imagen que ya está cargada en pantalla (si existe) para no perder
+    // el "gesto del usuario" esperando a que cargue una imagen nueva: en iPhone,
+    // si ese gesto se pierde, Safari bloquea silenciosamente la descarga.
+    const preloaded = document.getElementById('pc-photo-img');
+    if(preloaded && preloaded.complete && preloaded.naturalWidth){
+      renderAndExport(preloaded);
+    } else {
+      const img = new Image();
+      img.onload = () => renderAndExport(img);
+      img.onerror = () => showAppNotice('⚠️ No se pudo procesar la foto. Probá de nuevo.', false);
+      img.src = dataUrl;
+    }
+
+    function renderAndExport(img){
       const W = 1080, H = 1920;
       const canvas = document.createElement('canvas');
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
 
-      const scale = Math.max(W / img.width, H / img.height);
+      const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
       const sw = W / scale, sh = H / scale;
-      const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+      const sx = (img.naturalWidth - sw) / 2, sy = (img.naturalHeight - sh) / 2;
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
 
       const gradTop = ctx.createLinearGradient(0, 0, 0, H * 0.32);
@@ -2156,61 +2173,91 @@
 
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'alphabetic';
-      ctx.textAlign = 'center';
-
-      // Encabezado de marca: en negrita, blanco, centrado y un poco más abajo del borde superior
-      ctx.font = "700 66px Georgia, 'Times New Roman', serif";
-      ctx.fillText(STATE.progressPhoto.brandLabel || 'DVOLVE program', W / 2, 210);
       ctx.textAlign = 'left';
+
+      // Encabezado de marca: en negrita, blanco, alineado a la izquierda y más abajo del borde superior
+      ctx.font = "700 62px Georgia, 'Times New Roman', serif";
+      ctx.fillText(STATE.progressPhoto.brandLabel || 'DVOLVE program', 64, 300);
 
       if(isTraining){
         const badge = progressPhotoMuscle;
+        ctx.save();
+        ctx.filter = 'grayscale(1) brightness(0) invert(1)';
+        ctx.font = "44px 'Helvetica Neue', Arial, sans-serif";
+        ctx.fillText('🏋️', 64, 372);
+        ctx.restore();
+
         ctx.font = "40px 'Helvetica Neue', Arial, sans-serif";
         const padX = 24, badgeH = 62;
         const textW = ctx.measureText(badge).width;
-        const badgeX = (W - (textW + padX*2)) / 2;
-        const badgeY = 260;
+        const badgeX = 64;
+        const badgeY = 392;
         ctx.strokeStyle = 'rgba(255,255,255,0.8)';
         ctx.lineWidth = 2;
         roundRectPath(ctx, badgeX, badgeY, textW + padX*2, badgeH, badgeH/2);
         ctx.stroke();
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText(badge, W / 2, badgeY + badgeH/2 + 14);
+        ctx.fillText(badge, badgeX + (textW + padX*2)/2, badgeY + badgeH/2 + 14);
         ctx.textAlign = 'left';
       } else {
         const title = STATE.progressPhoto.nutritionTitle || '';
-        ctx.font = "600 48px Georgia, 'Times New Roman', serif";
-        const titleW = ctx.measureText(title).width;
-        const iconR = 26;
-        const groupW = iconR*2 + 14 + titleW;
-        const startX = (W - groupW) / 2;
         ctx.save();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.arc(startX + iconR, 250, iconR, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(startX + iconR, 250, iconR*0.45, 0, Math.PI*2); ctx.stroke();
+        ctx.filter = 'grayscale(1) brightness(0) invert(1)';
+        ctx.font = "48px 'Helvetica Neue', Arial, sans-serif";
+        ctx.fillText('🍽️', 64, 372);
         ctx.restore();
+
         ctx.fillStyle = '#fff';
-        ctx.fillText(title, startX + iconR*2 + 14, 264);
+        ctx.font = "600 48px Georgia, 'Times New Roman', serif";
+        ctx.fillText(title, 128, 366);
       }
 
       ctx.fillStyle = '#fff';
-      ctx.font = "700 40px 'Helvetica Neue', Arial, sans-serif";
+      ctx.font = "700 56px 'Helvetica Neue', Arial, sans-serif";
       const phrase = (isTraining ? STATE.progressPhoto.trainingPhrase : STATE.progressPhoto.nutritionPhrase) || '';
-      const phraseLines = wrapCanvasText(ctx, phrase, 64, H - 170, W - 128, 52);
+      const phraseLines = wrapCanvasText(ctx, phrase, 64, H - 300, W - 128, 66);
 
       ctx.font = "34px 'Helvetica Neue', Arial, sans-serif";
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.fillText(todayLongDate(), 64, H - 60);
+      ctx.fillText(todayLongDate(), 64, H - 90);
 
-      const link = document.createElement('a');
-      link.download = `dvolve-foto-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    };
-    img.onerror = () => showAppNotice('⚠️ No se pudo procesar la foto. Probá de nuevo.', false);
-    img.src = dataUrl;
+      exportCanvas(canvas);
+    }
+  }
+
+  // Guarda la imagen final en el celular. Prioriza la hoja de compartir nativa
+  // (en iPhone/Android esto ofrece directamente "Guardar imagen" al rollo de fotos);
+  // si el navegador no la soporta, cae a una descarga tradicional por Blob.
+  function exportCanvas(canvas){
+    const filename = `dvolve-foto-${Date.now()}.png`;
+    canvas.toBlob((blob) => {
+      if(!blob){
+        showAppNotice('⚠️ No se pudo generar la imagen. Probá de nuevo.', false);
+        return;
+      }
+      const file = new File([blob], filename, { type: 'image/png' });
+
+      if(navigator.canShare && navigator.canShare({ files:[file] })){
+        navigator.share({ files:[file] }).catch((err) => {
+          if(err && err.name === 'AbortError') return; // canceló ella misma, no es error
+          fallbackBlobDownload(blob, filename);
+        });
+        return;
+      }
+      fallbackBlobDownload(blob, filename);
+    }, 'image/png');
+  }
+
+  function fallbackBlobDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   function roundRectPath(ctx, x, y, w, h, r){
