@@ -343,6 +343,86 @@
   .week-chip.today .wn{ color:#F7F1E7; }
 
   .section-heading{ margin-bottom:18px; }
+
+  /* ---- Foto del día: tarjeta + overlays ---- */
+  .photo-card{
+    display:flex; align-items:center; gap:14px;
+    padding:18px 20px; border-radius:16px; margin-bottom:38px;
+    background: var(--espresso); color:#F7F1E7; cursor:pointer;
+  }
+  .photo-card-icon{ width:26px; height:26px; flex-shrink:0; color: var(--gold-light); }
+  .photo-card-icon svg{ width:100%; height:100%; }
+  .photo-card-text{
+    font-family: var(--font-serif); font-size:1.02rem; outline:none;
+    border-bottom:1px dashed transparent;
+  }
+  .photo-card-text:focus{ border-bottom-color: rgba(247,241,231,0.5); }
+
+  .photo-overlay{
+    position:fixed; inset:0; background:rgba(28,22,18,0.65);
+    display:flex; align-items:center; justify-content:center;
+    z-index:300; padding:20px;
+  }
+  .photo-choice-panel{
+    background: var(--card); border-radius:20px; padding:28px 24px;
+    width:100%; max-width:400px; text-align:center;
+  }
+  .photo-choice-panel h3{
+    font-family: var(--font-serif); color: var(--espresso); font-size:1.2rem; margin-bottom:8px;
+  }
+  .photo-choice-panel p{ color: var(--ink-soft); font-size:0.88rem; margin-bottom:22px; }
+  .photo-choice-btn{
+    display:block; width:100%; padding:16px; border-radius:12px; margin-bottom:12px;
+    background: var(--espresso); color:#F7F1E7; font-family: var(--font-serif); font-size:1rem;
+  }
+  .photo-choice-btn.alt{ background:transparent; border:1px solid var(--hairline); color:var(--ink); }
+  .photo-choice-close{ margin-top:6px; font-size:0.8rem; color: var(--ink-soft); text-decoration:underline; }
+
+  .photo-composer-panel{
+    position:relative; width:100%; max-width:420px; aspect-ratio:9/16; max-height:88vh;
+    border-radius:22px; overflow:hidden; background:#000;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .photo-composer-panel img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;
+  }
+  .photo-composer-scrim{
+    position:absolute; inset:0; z-index:1;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 68%, rgba(0,0,0,0.6) 100%);
+  }
+  .photo-composer-top, .photo-composer-bottom{
+    position:relative; z-index:2; padding:22px 22px 0;
+  }
+  .photo-composer-bottom{ padding:0 22px 22px; }
+  .photo-composer-close{
+    position:absolute; top:14px; right:16px; z-index:3; color:#fff; font-size:1.5rem; line-height:1;
+  }
+  .pc-title{
+    color:#fff; font-family: var(--font-serif); font-size:1.3rem; outline:none;
+    border-bottom:1px dashed transparent; display:inline-block;
+  }
+  .pc-title:focus{ border-bottom-color: rgba(255,255,255,0.5); }
+  .pc-plate-row{ display:flex; align-items:center; gap:8px; }
+  .pc-plate-icon{ width:26px; height:26px; color:#fff; flex-shrink:0; }
+  .pc-muscle-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+  .pc-muscle-chip{
+    padding:6px 13px; border-radius:999px; font-size:0.74rem; color:#fff;
+    border:1px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.08);
+  }
+  .pc-muscle-chip.selected{ background:#fff; color:var(--espresso); border-color:#fff; }
+  .pc-phrase{
+    color:#fff; font-family: var(--font-serif); font-style:italic; font-size:0.95rem;
+    outline:none; border-bottom:1px dashed transparent; display:block; margin-bottom:8px; line-height:1.4;
+  }
+  .pc-phrase:focus{ border-bottom-color: rgba(255,255,255,0.5); }
+  .pc-date{ color: rgba(255,255,255,0.85); font-size:0.76rem; letter-spacing:0.04em; }
+  .photo-composer-download{
+    margin-top:18px; width:100%; padding:15px; border-radius:12px;
+    background:#F7F1E7; color: var(--espresso); font-family: var(--font-serif); font-size:0.95rem;
+  }
+  .photo-composer-wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .photo-composer-hint{ color:#F7F1E7; font-size:0.76rem; text-align:center; max-width:340px; opacity:0.85; }
+
   .section-heading h2{ font-size:1.5rem; font-weight:500; }
   .section-heading p{ font-size:0.88rem; color:var(--ink-soft); margin-top:4px; }
 
@@ -1173,6 +1253,14 @@
 
       <div class="week-strip" id="week-strip"></div>
 
+      <div class="photo-card" id="photo-card-btn">
+        <span class="photo-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </span>
+        <span class="photo-card-text" data-tkey="photo-card-title" contenteditable="true">Guardá tu foto de hoy</span>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="progress-photo-input" style="display:none">
+
       <div class="section-heading">
         <h2 data-tkey="dash-heading" contenteditable="true">Tu semana, a tu manera</h2>
         <p data-tkey="dash-heading-sub" contenteditable="true">Entrenamiento, nutrición y coaching, armados específicamente para vos.</p>
@@ -1771,7 +1859,7 @@
 
         <div class="panel">
           <h2>Tu biblioteca de ejercicios</h2>
-          <p class="panel-sub">Cargá acá todos los ejercicios que uses, con video. Es solo tuya — las alumnas nunca la ven. Después, con "Agregar a la plantilla" mandás el ejercicio a la plantilla que estás editando arriba.</p>
+          <p class="panel-sub">Cargá acá el nombre, el músculo que trabaja y la descripción de cómo se hace, con video. Es solo tuya — las alumnas nunca la ven. Las series y repeticiones no se cargan acá: se ponen después, al armar la plantilla o al asignarle la rutina a cada alumna, porque cambian de una a otra. Con "Agregar a la plantilla" mandás el ejercicio a la plantilla que estás editando arriba.</p>
           <div class="field" style="max-width:340px;margin-bottom:14px;">
             <label for="library-search">Buscar ejercicio</label>
             <input type="text" id="library-search" placeholder="Ej: sentadilla, press, plancha…" style="width:100%;padding:13px 16px;border-radius:10px;border:1px solid var(--hairline);background:var(--card);font-family:inherit;">
@@ -1856,6 +1944,259 @@
   function escapeHtml(s){
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
+  // ---- Foto del día: elegir Entrenamiento/Alimentación, sacar foto, armar la tarjeta y descargarla ----
+  const PROGRESS_MUSCLES = ['Piernas','Glúteos','Espalda','Pecho','Hombros','Brazos','Core / Abdomen','Full body'];
+  let progressPhotoMode = null;
+  let progressPhotoMuscle = PROGRESS_MUSCLES[0];
+
+  function todayLongDate(){
+    const d = new Date();
+    const txt = d.toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+  }
+
+  const photoCardBtn = document.getElementById('photo-card-btn');
+  const progressPhotoInput = document.getElementById('progress-photo-input');
+
+  function syncProgressPhotoCardText(){
+    const el = document.querySelector('.photo-card-text');
+    if(el && !el.dataset.boundBlur){
+      el.textContent = STATE.progressPhoto.cardTitle;
+      el.dataset.boundBlur = '1';
+      el.addEventListener('blur', () => {
+        const val = el.textContent.trim();
+        if(!val){ el.textContent = STATE.progressPhoto.cardTitle; return; }
+        STATE.progressPhoto.cardTitle = val;
+        saveState();
+      });
+    } else if(el){
+      el.textContent = STATE.progressPhoto.cardTitle;
+    }
+  }
+
+  if(photoCardBtn){
+    photoCardBtn.addEventListener('click', (e) => {
+      if(document.activeElement === document.querySelector('.photo-card-text')) return;
+      openPhotoChoiceOverlay();
+    });
+  }
+
+  function openPhotoChoiceOverlay(){
+    const existing = document.getElementById('photo-choice-overlay');
+    if(existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-overlay';
+    overlay.id = 'photo-choice-overlay';
+    overlay.innerHTML = `
+      <div class="photo-choice-panel">
+        <h3>¿A qué le vas a sacar la foto?</h3>
+        <p>Elegí una opción y se abre la cámara.</p>
+        <button type="button" class="photo-choice-btn" data-mode="training">🏋️ Entrenamiento</button>
+        <button type="button" class="photo-choice-btn alt" data-mode="nutrition">🍽️ Alimentación</button>
+        <span class="photo-choice-close">Cancelar</span>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+    overlay.querySelector('.photo-choice-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelectorAll('.photo-choice-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        progressPhotoMode = btn.dataset.mode;
+        overlay.remove();
+        progressPhotoInput.click();
+      });
+    });
+  }
+
+  if(progressPhotoInput){
+    progressPhotoInput.addEventListener('change', () => {
+      const file = progressPhotoInput.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => openPhotoComposer(e.target.result);
+      reader.readAsDataURL(file);
+      progressPhotoInput.value = '';
+    });
+  }
+
+  function openPhotoComposer(dataUrl){
+    const existing = document.getElementById('photo-composer-overlay');
+    if(existing) existing.remove();
+    progressPhotoMuscle = PROGRESS_MUSCLES[0];
+
+    const isTraining = progressPhotoMode === 'training';
+    const title = isTraining ? STATE.progressPhoto.trainingTitle : STATE.progressPhoto.nutritionTitle;
+    const phrase = isTraining ? STATE.progressPhoto.trainingPhrase : STATE.progressPhoto.nutritionPhrase;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-overlay';
+    overlay.id = 'photo-composer-overlay';
+
+    const muscleChipsHtml = isTraining
+      ? `<div class="pc-muscle-chips">${PROGRESS_MUSCLES.map(m => `<span class="pc-muscle-chip${m===progressPhotoMuscle ? ' selected':''}" data-muscle="${m}">${m}</span>`).join('')}</div>`
+      : '';
+
+    const topHtml = isTraining
+      ? `<span class="pc-title" contenteditable="true" id="pc-title-el">${title}</span>${muscleChipsHtml}`
+      : `<div class="pc-plate-row">
+           <svg class="pc-plate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/></svg>
+           <span class="pc-title" contenteditable="true" id="pc-title-el">${title}</span>
+         </div>`;
+
+    overlay.innerHTML = `
+      <div class="photo-composer-wrap">
+        <div class="photo-composer-panel" id="photo-composer-panel">
+          <img src="${dataUrl}" id="pc-photo-img" crossorigin="anonymous">
+          <div class="photo-composer-scrim"></div>
+          <span class="photo-composer-close" id="pc-close">×</span>
+          <div class="photo-composer-top">${topHtml}</div>
+          <div class="photo-composer-bottom">
+            <span class="pc-phrase" contenteditable="true" id="pc-phrase-el">${phrase}</span>
+            <span class="pc-date">${todayLongDate()}</span>
+          </div>
+        </div>
+        <button type="button" class="photo-composer-download" id="pc-download-btn">⬇ Descargar foto</button>
+        <p class="photo-composer-hint">En iPhone puede abrirse en una pestaña nueva: mantené presionada la imagen y elegí "Guardar imagen".</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+    document.getElementById('pc-close').addEventListener('click', () => overlay.remove());
+
+    if(isTraining){
+      overlay.querySelectorAll('.pc-muscle-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          progressPhotoMuscle = chip.dataset.muscle;
+          overlay.querySelectorAll('.pc-muscle-chip').forEach(c => c.classList.toggle('selected', c === chip));
+        });
+      });
+    }
+
+    document.getElementById('pc-title-el').addEventListener('blur', (e) => {
+      const val = e.target.textContent.trim();
+      if(!val) return;
+      if(isTraining) STATE.progressPhoto.trainingTitle = val;
+      else STATE.progressPhoto.nutritionTitle = val;
+      saveState();
+    });
+    document.getElementById('pc-phrase-el').addEventListener('blur', (e) => {
+      const val = e.target.textContent.trim();
+      if(!val) return;
+      if(isTraining) STATE.progressPhoto.trainingPhrase = val;
+      else STATE.progressPhoto.nutritionPhrase = val;
+      saveState();
+    });
+
+    document.getElementById('pc-download-btn').addEventListener('click', () => {
+      downloadComposedPhoto(dataUrl, isTraining);
+    });
+  }
+
+  function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight){
+    const words = text.split(' ');
+    let line = '';
+    const lines = [];
+    words.forEach(word => {
+      const test = line ? line + ' ' + word : word;
+      if(ctx.measureText(test).width > maxWidth && line){
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if(line) lines.push(line);
+    lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+    return lines.length;
+  }
+
+  function downloadComposedPhoto(dataUrl, isTraining){
+    const img = new Image();
+    img.onload = () => {
+      const W = 1080, H = 1920;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      const scale = Math.max(W / img.width, H / img.height);
+      const sw = W / scale, sh = H / scale;
+      const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+
+      const gradTop = ctx.createLinearGradient(0, 0, 0, H * 0.32);
+      gradTop.addColorStop(0, 'rgba(0,0,0,0.55)');
+      gradTop.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gradTop;
+      ctx.fillRect(0, 0, W, H * 0.32);
+
+      const gradBottom = ctx.createLinearGradient(0, H * 0.68, 0, H);
+      gradBottom.addColorStop(0, 'rgba(0,0,0,0)');
+      gradBottom.addColorStop(1, 'rgba(0,0,0,0.62)');
+      ctx.fillStyle = gradBottom;
+      ctx.fillRect(0, H * 0.68, W, H * 0.32);
+
+      ctx.fillStyle = '#fff';
+      ctx.textBaseline = 'alphabetic';
+
+      const title = (isTraining ? STATE.progressPhoto.trainingTitle : STATE.progressPhoto.nutritionTitle) || '';
+      ctx.font = "600 58px Georgia, 'Times New Roman', serif";
+      let titleX = 64;
+      if(!isTraining){
+        // ícono de plato en blanco al lado del título
+        ctx.save();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(90, 118, 34, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(90, 118, 16, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+        titleX = 150;
+      }
+      ctx.fillText(title, titleX, 145);
+
+      if(isTraining){
+        const badge = progressPhotoMuscle;
+        ctx.font = "40px 'Helvetica Neue', Arial, sans-serif";
+        const padX = 24, badgeH = 62;
+        const textW = ctx.measureText(badge).width;
+        const badgeY = 190;
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 2;
+        roundRectPath(ctx, 60, badgeY, textW + padX*2, badgeH, badgeH/2);
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.fillText(badge, 60 + padX, badgeY + badgeH/2 + 14);
+      }
+
+      ctx.fillStyle = '#fff';
+      ctx.font = "italic 42px Georgia, 'Times New Roman', serif";
+      const phrase = (isTraining ? STATE.progressPhoto.trainingPhrase : STATE.progressPhoto.nutritionPhrase) || '';
+      const phraseLines = wrapCanvasText(ctx, phrase, 64, H - 170, W - 128, 52);
+
+      ctx.font = "34px 'Helvetica Neue', Arial, sans-serif";
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillText(todayLongDate(), 64, H - 60);
+
+      const link = document.createElement('a');
+      link.download = `dvolve-foto-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+    img.onerror = () => showAppNotice('⚠️ No se pudo procesar la foto. Probá de nuevo.', false);
+    img.src = dataUrl;
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
 
   // ---- Merge profundo: combina lo guardado con los valores por defecto
   // sin perder categorías o campos nuevos (arregla p.ej. "+ Agregar receta") ----
@@ -2297,20 +2638,20 @@
     workoutTemplates: [],
     exerciseLibrary: {
       trensuperior: [
-        { name:'Press militar con mancuernas', series:'4', reps:'10', peso:'8 kg', desc:'Parada o sentada, empujá las mancuernas hacia arriba sin arquear la zona lumbar.' },
-        { name:'Remo con mancuerna', series:'4', reps:'12 c/lado', peso:'10 kg', desc:'Apoyo en banco, llevá el codo hacia atrás apretando la espalda al final del recorrido.' }
+        { name:'Press militar con mancuernas', muscle:'Hombros', series:'', reps:'', peso:'', descanso:'', desc:'Parada o sentada, empujá las mancuernas hacia arriba sin arquear la zona lumbar.' },
+        { name:'Remo con mancuerna', muscle:'Espalda', series:'', reps:'', peso:'', descanso:'', desc:'Apoyo en banco, llevá el codo hacia atrás apretando la espalda al final del recorrido.' }
       ],
       treninferior: [
-        { name:'Sentadilla goblet', series:'4', reps:'12', peso:'16 kg', desc:'Pies separados al ancho de cadera, mancuerna pegada al pecho.' },
-        { name:'Hip thrust', series:'4', reps:'12', peso:'30 kg', desc:'Espalda apoyada en el banco, empujá con los talones y apretá el glúteo arriba.' }
+        { name:'Sentadilla goblet', muscle:'Cuádriceps y glúteos', series:'', reps:'', peso:'', descanso:'', desc:'Pies separados al ancho de cadera, mancuerna pegada al pecho.' },
+        { name:'Hip thrust', muscle:'Glúteos', series:'', reps:'', peso:'', descanso:'', desc:'Espalda apoyada en el banco, empujá con los talones y apretá el glúteo arriba.' }
       ],
       hit: [
-        { name:'Burpees', series:'4', reps:'30 seg', peso:'Peso corporal', desc:'Movimiento completo y explosivo, a ritmo alto durante todo el bloque.' },
-        { name:'Mountain climbers', series:'4', reps:'30 seg', peso:'Peso corporal', desc:'Posición de plancha, llevá las rodillas al pecho alternando rápido.' }
+        { name:'Burpees', muscle:'Full body', series:'', reps:'', peso:'', descanso:'', desc:'Movimiento completo y explosivo, a ritmo alto durante todo el bloque.' },
+        { name:'Mountain climbers', muscle:'Full body / core', series:'', reps:'', peso:'', descanso:'', desc:'Posición de plancha, llevá las rodillas al pecho alternando rápido.' }
       ],
       abdominales: [
-        { name:'Plancha abdominal', series:'3', reps:'40 seg', peso:'Peso corporal', desc:'Cuerpo alineado, abdomen contraído. No dejes caer la cadera.' },
-        { name:'Russian twist', series:'3', reps:'16', peso:'4 kg', desc:'Tronco inclinado hacia atrás, girá de lado a lado sin perder la postura.' }
+        { name:'Plancha abdominal', muscle:'Core', series:'', reps:'', peso:'', descanso:'', desc:'Cuerpo alineado, abdomen contraído. No dejes caer la cadera.' },
+        { name:'Russian twist', muscle:'Oblicuos', series:'', reps:'', peso:'', descanso:'', desc:'Tronco inclinado hacia atrás, girá de lado a lado sin perder la postura.' }
       ]
     },
     sectionBanners: {},
@@ -2358,6 +2699,13 @@
       { title:'Estiramiento de cuádriceps', desc:'Parada, llevá el talón hacia el glúteo sosteniendo el tobillo, rodillas juntas.' },
       { title:'Gato-vaca (espalda)', desc:'En cuatro apoyos, alterná arquear y redondear la espalda acompañando la respiración.' }
     ],
+    progressPhoto: {
+      cardTitle: 'Guardá tu foto de hoy',
+      trainingTitle: 'DVOLVE program',
+      trainingPhrase: 'Elegí hacerte más fuerte día a día',
+      nutritionTitle: 'Mi plato',
+      nutritionPhrase: 'Lo que buscás afuera, primero tiene que habitar adentro'
+    },
     recipeCatLabels: { dulces:'🍰 Dulces', almuerzos:'🍽️ Almuerzos', bebidas:'🥤 Bebidas', meriendas:'🥪 Meriendas' },
     occasions: ['Juntada con amigos'],
     recipeBook: {
@@ -2634,6 +2982,7 @@
     renderOccasionFilters();
     renderRecipeGrid();
     renderFlyerTitles();
+    syncProgressPhotoCardText();
     renderPaletteGrid();
     applyTheme(STATE.theme);
     initEditableText();
@@ -3136,17 +3485,27 @@
   let myRoutine = null;            // la rutina propia, para la vista de la alumna
 
   // Crea una tarjeta de ejercicio reutilizable (vista alumna y constructor admin)
-  function createExerciseCardEl(ex, onFieldChange, onRemove, onVideoUpload){
+  function createExerciseCardEl(ex, onFieldChange, onRemove, onVideoUpload, mode){
     const card = document.createElement('div');
     card.className = 'exercise-card';
     let mediaHtml;
     if(ex.videoUrl && ex.mediaIsVideo === false){
       mediaHtml = `<img src="${ex.videoUrl}" alt="">`;
     } else if(ex.videoUrl){
-      mediaHtml = `<video src="${ex.videoUrl}" controls></video>`;
+      mediaHtml = `<video src="${ex.videoUrl}" controls muted playsinline></video>`;
     } else {
       mediaHtml = `<div class="video-placeholder"><span class="plus">+</span>Subí foto<br>o video</div>`;
     }
+    const metaHtml = (mode === 'library')
+      ? `<div class="exercise-meta-row">
+          <div class="m-field" style="flex:1 1 100%;min-width:200px;"><label>Músculo / grupo trabajado</label><span contenteditable="true" data-field="muscle">${ex.muscle || ''}</span></div>
+        </div>`
+      : `<div class="exercise-meta-row">
+          <div class="m-field"><label>Series</label><span contenteditable="true" data-field="series">${ex.series || ''}</span></div>
+          <div class="m-field"><label>Reps</label><span contenteditable="true" data-field="reps">${ex.reps || ''}</span></div>
+          <div class="m-field"><label>Peso</label><span contenteditable="true" data-field="peso">${ex.peso || ''}</span></div>
+          <div class="m-field"><label>Descanso</label><span contenteditable="true" data-field="descanso">${ex.descanso || '—'}</span></div>
+        </div>`;
     card.innerHTML = `
       <div class="exercise-video">
         ${mediaHtml}
@@ -3154,12 +3513,7 @@
       </div>
       <div class="exercise-body">
         <h3 contenteditable="true" data-field="name">${ex.name}</h3>
-        <div class="exercise-meta-row">
-          <div class="m-field"><label>Series</label><span contenteditable="true" data-field="series">${ex.series}</span></div>
-          <div class="m-field"><label>Reps</label><span contenteditable="true" data-field="reps">${ex.reps}</span></div>
-          <div class="m-field"><label>Peso</label><span contenteditable="true" data-field="peso">${ex.peso}</span></div>
-          <div class="m-field"><label>Descanso</label><span contenteditable="true" data-field="descanso">${ex.descanso || '—'}</span></div>
-        </div>
+        ${metaHtml}
         <p class="exercise-desc" contenteditable="true" data-field="desc">${ex.desc}</p>
         <span class="book-remove">Eliminar</span>
       </div>
@@ -3180,7 +3534,7 @@
       const url = await uploadFileToStorage(file, 'exercise-media');
       if(url){
         videoBox.innerHTML = isVideo
-          ? `<video src="${url}" controls></video>`
+          ? `<video src="${url}" controls muted playsinline></video>`
           : `<img src="${url}" alt="">`;
         if(onVideoUpload) onVideoUpload(url, isVideo);
       } else if(placeholder){
@@ -3694,7 +4048,7 @@
     if(search){
       Object.keys(STATE.exerciseLibrary).forEach(cat => {
         (STATE.exerciseLibrary[cat] || []).forEach((ex, idx) => {
-          const hay = ((ex.name || '') + ' ' + (ex.desc || '')).toLowerCase();
+          const hay = ((ex.name || '') + ' ' + (ex.muscle || '') + ' ' + (ex.desc || '')).toLowerCase();
           if(hay.includes(search)) entries.push({ cat, idx });
         });
       });
@@ -3715,7 +4069,8 @@
       const card = createExerciseCardEl(ex,
         (field, value) => { STATE.exerciseLibrary[cat][idx][field] = value; saveState(); },
         () => { STATE.exerciseLibrary[cat].splice(idx, 1); saveState(); renderLibrary(); },
-        (url, isVideo) => { STATE.exerciseLibrary[cat][idx].videoUrl = url; STATE.exerciseLibrary[cat][idx].mediaIsVideo = isVideo; saveState(); }
+        (url, isVideo) => { STATE.exerciseLibrary[cat][idx].videoUrl = url; STATE.exerciseLibrary[cat][idx].mediaIsVideo = isVideo; saveState(); },
+        'library'
       );
       // En modo búsqueda, mostrar de qué categoría es cada resultado
       if(search){
@@ -3768,7 +4123,7 @@
 
   document.getElementById('add-library-exercise-btn').addEventListener('click', () => {
     if(!STATE.exerciseLibrary[currentLibraryCat]) STATE.exerciseLibrary[currentLibraryCat] = [];
-    STATE.exerciseLibrary[currentLibraryCat].push({ name:'Nuevo ejercicio', series:'3', reps:'12', peso:'—', descanso:'60 seg', desc:'Descripción de cómo se hace.' });
+    STATE.exerciseLibrary[currentLibraryCat].push({ name:'Nuevo ejercicio', muscle:'', series:'', reps:'', peso:'', descanso:'', desc:'Descripción de cómo se hace.' });
     const searchInput = document.getElementById('library-search');
     if(searchInput) searchInput.value = '';   // salir del modo búsqueda para ver el ejercicio nuevo
     saveState();
