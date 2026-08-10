@@ -397,22 +397,29 @@
   .photo-composer-close{
     position:absolute; top:14px; right:16px; z-index:3; color:#fff; font-size:1.5rem; line-height:1;
   }
+  .pc-brand{
+    color:#fff; font-family: var(--font-serif); font-weight:700; font-size:1.5rem;
+    text-align:center; outline:none; border-bottom:1px dashed transparent;
+    display:block; width:100%; margin-top:14px; letter-spacing:0.01em;
+  }
+  .pc-brand:focus{ border-bottom-color: rgba(255,255,255,0.5); }
   .pc-title{
     color:#fff; font-family: var(--font-serif); font-size:1.3rem; outline:none;
     border-bottom:1px dashed transparent; display:inline-block;
   }
   .pc-title:focus{ border-bottom-color: rgba(255,255,255,0.5); }
-  .pc-plate-row{ display:flex; align-items:center; gap:8px; }
+  .pc-plate-row{ display:flex; align-items:center; gap:8px; justify-content:center; margin-top:10px; }
   .pc-plate-icon{ width:26px; height:26px; color:#fff; flex-shrink:0; }
-  .pc-muscle-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+  .pc-muscle-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; justify-content:center; }
   .pc-muscle-chip{
     padding:6px 13px; border-radius:999px; font-size:0.74rem; color:#fff;
     border:1px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.08);
   }
   .pc-muscle-chip.selected{ background:#fff; color:var(--espresso); border-color:#fff; }
   .pc-phrase{
-    color:#fff; font-family: var(--font-serif); font-style:italic; font-size:0.95rem;
+    color:#fff; font-family:'Helvetica Neue', Arial, sans-serif; font-weight:700; font-size:1rem;
     outline:none; border-bottom:1px dashed transparent; display:block; margin-bottom:8px; line-height:1.4;
+    white-space:normal; word-wrap:break-word; text-align:left;
   }
   .pc-phrase:focus{ border-bottom-color: rgba(255,255,255,0.5); }
   .pc-date{ color: rgba(255,255,255,0.85); font-size:0.76rem; letter-spacing:0.04em; }
@@ -2026,7 +2033,6 @@
     progressPhotoMuscle = PROGRESS_MUSCLES[0];
 
     const isTraining = progressPhotoMode === 'training';
-    const title = isTraining ? STATE.progressPhoto.trainingTitle : STATE.progressPhoto.nutritionTitle;
     const phrase = isTraining ? STATE.progressPhoto.trainingPhrase : STATE.progressPhoto.nutritionPhrase;
 
     const overlay = document.createElement('div');
@@ -2037,11 +2043,11 @@
       ? `<div class="pc-muscle-chips">${PROGRESS_MUSCLES.map(m => `<span class="pc-muscle-chip${m===progressPhotoMuscle ? ' selected':''}" data-muscle="${m}">${m}</span>`).join('')}</div>`
       : '';
 
-    const topHtml = isTraining
-      ? `<span class="pc-title" contenteditable="true" id="pc-title-el">${title}</span>${muscleChipsHtml}`
+    const secondaryHtml = isTraining
+      ? muscleChipsHtml
       : `<div class="pc-plate-row">
            <svg class="pc-plate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/></svg>
-           <span class="pc-title" contenteditable="true" id="pc-title-el">${title}</span>
+           <span class="pc-title" contenteditable="true" id="pc-title-el">${STATE.progressPhoto.nutritionTitle}</span>
          </div>`;
 
     overlay.innerHTML = `
@@ -2050,7 +2056,10 @@
           <img src="${dataUrl}" id="pc-photo-img" crossorigin="anonymous">
           <div class="photo-composer-scrim"></div>
           <span class="photo-composer-close" id="pc-close">×</span>
-          <div class="photo-composer-top">${topHtml}</div>
+          <div class="photo-composer-top">
+            <span class="pc-brand" contenteditable="true" id="pc-brand-el">${STATE.progressPhoto.brandLabel}</span>
+            ${secondaryHtml}
+          </div>
           <div class="photo-composer-bottom">
             <span class="pc-phrase" contenteditable="true" id="pc-phrase-el">${phrase}</span>
             <span class="pc-date">${todayLongDate()}</span>
@@ -2074,13 +2083,21 @@
       });
     }
 
-    document.getElementById('pc-title-el').addEventListener('blur', (e) => {
+    document.getElementById('pc-brand-el').addEventListener('blur', (e) => {
       const val = e.target.textContent.trim();
-      if(!val) return;
-      if(isTraining) STATE.progressPhoto.trainingTitle = val;
-      else STATE.progressPhoto.nutritionTitle = val;
+      if(!val){ e.target.textContent = STATE.progressPhoto.brandLabel; return; }
+      STATE.progressPhoto.brandLabel = val;
       saveState();
     });
+    const titleEl = document.getElementById('pc-title-el');
+    if(titleEl){
+      titleEl.addEventListener('blur', (e) => {
+        const val = e.target.textContent.trim();
+        if(!val) return;
+        STATE.progressPhoto.nutritionTitle = val;
+        saveState();
+      });
+    }
     document.getElementById('pc-phrase-el').addEventListener('blur', (e) => {
       const val = e.target.textContent.trim();
       if(!val) return;
@@ -2139,38 +2156,47 @@
 
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'center';
 
-      const title = (isTraining ? STATE.progressPhoto.trainingTitle : STATE.progressPhoto.nutritionTitle) || '';
-      ctx.font = "600 58px Georgia, 'Times New Roman', serif";
-      let titleX = 64;
-      if(!isTraining){
-        // ícono de plato en blanco al lado del título
-        ctx.save();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.arc(90, 118, 34, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(90, 118, 16, 0, Math.PI*2); ctx.stroke();
-        ctx.restore();
-        titleX = 150;
-      }
-      ctx.fillText(title, titleX, 145);
+      // Encabezado de marca: en negrita, blanco, centrado y un poco más abajo del borde superior
+      ctx.font = "700 66px Georgia, 'Times New Roman', serif";
+      ctx.fillText(STATE.progressPhoto.brandLabel || 'DVOLVE program', W / 2, 210);
+      ctx.textAlign = 'left';
 
       if(isTraining){
         const badge = progressPhotoMuscle;
         ctx.font = "40px 'Helvetica Neue', Arial, sans-serif";
         const padX = 24, badgeH = 62;
         const textW = ctx.measureText(badge).width;
-        const badgeY = 190;
+        const badgeX = (W - (textW + padX*2)) / 2;
+        const badgeY = 260;
         ctx.strokeStyle = 'rgba(255,255,255,0.8)';
         ctx.lineWidth = 2;
-        roundRectPath(ctx, 60, badgeY, textW + padX*2, badgeH, badgeH/2);
+        roundRectPath(ctx, badgeX, badgeY, textW + padX*2, badgeH, badgeH/2);
         ctx.stroke();
         ctx.fillStyle = '#fff';
-        ctx.fillText(badge, 60 + padX, badgeY + badgeH/2 + 14);
+        ctx.textAlign = 'center';
+        ctx.fillText(badge, W / 2, badgeY + badgeH/2 + 14);
+        ctx.textAlign = 'left';
+      } else {
+        const title = STATE.progressPhoto.nutritionTitle || '';
+        ctx.font = "600 48px Georgia, 'Times New Roman', serif";
+        const titleW = ctx.measureText(title).width;
+        const iconR = 26;
+        const groupW = iconR*2 + 14 + titleW;
+        const startX = (W - groupW) / 2;
+        ctx.save();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(startX + iconR, 250, iconR, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(startX + iconR, 250, iconR*0.45, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = '#fff';
+        ctx.fillText(title, startX + iconR*2 + 14, 264);
       }
 
       ctx.fillStyle = '#fff';
-      ctx.font = "italic 42px Georgia, 'Times New Roman', serif";
+      ctx.font = "700 40px 'Helvetica Neue', Arial, sans-serif";
       const phrase = (isTraining ? STATE.progressPhoto.trainingPhrase : STATE.progressPhoto.nutritionPhrase) || '';
       const phraseLines = wrapCanvasText(ctx, phrase, 64, H - 170, W - 128, 52);
 
@@ -2701,7 +2727,7 @@
     ],
     progressPhoto: {
       cardTitle: 'Guardá tu foto de hoy',
-      trainingTitle: 'DVOLVE program',
+      brandLabel: 'DVOLVE program',
       trainingPhrase: 'Elegí hacerte más fuerte día a día',
       nutritionTitle: 'Mi plato',
       nutritionPhrase: 'Lo que buscás afuera, primero tiene que habitar adentro'
