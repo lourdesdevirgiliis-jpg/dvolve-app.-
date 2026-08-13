@@ -503,7 +503,8 @@
   body.viewer-mode #weight-form input,
   body.viewer-mode #weight-form textarea,
   body.viewer-mode #feeling-input,
-  body.viewer-mode #weight-input{
+  body.viewer-mode #weight-input,
+  body.viewer-mode #goal-weight-input{
     pointer-events: auto !important;
     opacity: 1;
   }
@@ -1588,7 +1589,13 @@
 
       <div class="stats-row">
         <div class="stat"><div class="num" id="stat-current">67.4 kg</div><div class="label" data-tkey="stat-label-1" contenteditable="true">Peso actual</div></div>
-        <div class="stat"><div class="num">64 kg</div><div class="label" data-tkey="stat-label-2" contenteditable="true">Objetivo</div></div>
+        <div class="stat">
+          <div class="num" style="display:flex;align-items:baseline;justify-content:center;gap:4px;">
+            <input type="number" step="0.1" id="goal-weight-input" placeholder="—" style="width:56px;background:transparent;border:none;border-bottom:1px dashed var(--hairline);font:inherit;font-size:inherit;color:inherit;text-align:right;padding:0 2px;">
+            <span>kg</span>
+          </div>
+          <div class="label" data-tkey="stat-label-2" contenteditable="true">Objetivo (tocá para poner el tuyo)</div>
+        </div>
         <div class="stat"><div class="num" id="stat-sessions">14</div><div class="label" data-tkey="stat-label-3" contenteditable="true">Sesiones completadas</div></div>
         <div class="stat"><div class="num" id="stat-week">-1.2 kg</div><div class="label" data-tkey="stat-label-4" contenteditable="true">Esta semana</div></div>
       </div>
@@ -2372,7 +2379,8 @@
       const allowed = el.classList.contains('client-input')
         || el.closest('#weight-form')
         || el.id === 'weight-input'
-        || el.id === 'feeling-input';
+        || el.id === 'feeling-input'
+        || el.id === 'goal-weight-input';
       if(!allowed) el.disabled = true;
     });
   }
@@ -2724,6 +2732,7 @@
     studentProfiles: {},
     studentShoppingLists: {},
     studentNutritionFiles: {},
+    studentGoals: {},
     flyerPages: [
       {
         title: 'Antojos y emergencias',
@@ -3041,6 +3050,7 @@
     renderRecipeGrid();
     renderFlyerTitles();
     syncProgressPhotoCardText();
+    loadGoalWeightInput();
     renderPaletteGrid();
     applyTheme(STATE.theme);
     initEditableText();
@@ -3060,6 +3070,24 @@
       if(statWeek) statWeek.textContent = (diff > 0 ? '+' : '') + diff + ' kg';
     }
     if(statSessions) statSessions.textContent = STATE.sessionsCompleted;
+  }
+
+  // ---- Objetivo de peso: lo pone y edita cada alumna, queda guardado por cuenta ----
+  function loadGoalWeightInput(){
+    const input = document.getElementById('goal-weight-input');
+    if(!input || !currentUser) return;
+    if(!STATE.studentGoals) STATE.studentGoals = {};
+    const saved = STATE.studentGoals[currentUser.email];
+    input.value = (saved !== undefined && saved !== null) ? saved : '';
+    if(!input.dataset.boundBlur){
+      input.dataset.boundBlur = '1';
+      input.addEventListener('blur', () => {
+        if(!STATE.studentGoals) STATE.studentGoals = {};
+        const val = input.value.trim();
+        STATE.studentGoals[currentUser.email] = val ? Number(val) : null;
+        saveState();
+      });
+    }
   }
 
   async function loadFeelingLogFromSupabase(){
@@ -3512,7 +3540,8 @@
 
   // ---- Quick-card click to navigate + photo upload ----
   document.querySelectorAll('.quick-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      if(e.target.closest('[contenteditable="true"]')) return;
       const target = card.dataset.nav;
       navItems.forEach(b => b.classList.toggle('active', b.dataset.target === target));
       sections.forEach(s => s.classList.toggle('active', s.id === target));
