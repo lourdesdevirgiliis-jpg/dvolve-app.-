@@ -391,12 +391,12 @@
     background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 68%, rgba(0,0,0,0.6) 100%);
   }
   .pc-logo{
-    position:absolute; top:20px; left:20px; width:40px; height:auto; z-index:2;
+    position:absolute; top:13%; left:20px; width:40px; height:auto; z-index:2;
   }
   .photo-composer-top, .photo-composer-bottom{
-    position:relative; z-index:2; padding:22px 22px 0;
+    position:relative; z-index:2; padding:13% 22px 0;
   }
-  .photo-composer-bottom{ padding:0 22px 22px; }
+  .photo-composer-bottom{ padding:0 22px 13%; }
   .photo-composer-close{
     position:absolute; top:14px; right:16px; z-index:3; color:#fff; font-size:1.5rem; line-height:1;
   }
@@ -2092,7 +2092,7 @@
           </div>
         </div>
         <button type="button" class="photo-composer-download" id="pc-download-btn">⬇ Descargar foto</button>
-        <p class="photo-composer-hint">En iPhone puede abrirse en una pestaña nueva: mantené presionada la imagen y elegí "Guardar imagen".</p>
+        <p class="photo-composer-hint">Se abre el panel para compartir — elegí "Guardar imagen" para que quede en tus Fotos.</p>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -2193,16 +2193,16 @@
       if(logoImg){
         const logoW = 108;
         const logoH = logoImg.height * (logoW / logoImg.width);
-        ctx.drawImage(logoImg, 46, 46, logoW, logoH);
+        ctx.drawImage(logoImg, 46, 296, logoW, logoH);
       }
 
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
 
-      // Encabezado de marca: en negrita, blanco, centrado y un poco más abajo del borde superior
+      // Encabezado de marca: en negrita, blanco, centrado, dentro del margen seguro de Instagram (no tan arriba)
       ctx.font = "700 66px Georgia, 'Times New Roman', serif";
-      ctx.fillText(STATE.progressPhoto.brandLabel || 'DVOLVE program', W / 2, 210);
+      ctx.fillText(STATE.progressPhoto.brandLabel || 'DVOLVE program', W / 2, 460);
       ctx.textAlign = 'left';
 
       if(isTraining){
@@ -2211,7 +2211,7 @@
         const padX = 24, badgeH = 62;
         const textW = ctx.measureText(badge).width;
         const badgeX = (W - (textW + padX*2)) / 2;
-        const badgeY = 260;
+        const badgeY = 510;
         ctx.strokeStyle = 'rgba(255,255,255,0.8)';
         ctx.lineWidth = 2;
         roundRectPath(ctx, badgeX, badgeY, textW + padX*2, badgeH, badgeH/2);
@@ -2230,26 +2230,43 @@
         ctx.save();
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.arc(startX + iconR, 250, iconR, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(startX + iconR, 250, iconR*0.45, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(startX + iconR, 500, iconR, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(startX + iconR, 500, iconR*0.45, 0, Math.PI*2); ctx.stroke();
         ctx.restore();
         ctx.fillStyle = '#fff';
-        ctx.fillText(title, startX + iconR*2 + 14, 264);
+        ctx.fillText(title, startX + iconR*2 + 14, 514);
       }
 
       ctx.fillStyle = '#fff';
       ctx.font = "700 40px 'Helvetica Neue', Arial, sans-serif";
       const phrase = (isTraining ? STATE.progressPhoto.trainingPhrase : STATE.progressPhoto.nutritionPhrase) || '';
-      const phraseLines = wrapCanvasText(ctx, phrase, 64, H - 170, W - 128, 52);
+      const phraseLines = wrapCanvasText(ctx, phrase, 64, H - 420, W - 128, 52);
 
       ctx.font = "34px 'Helvetica Neue', Arial, sans-serif";
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.fillText(todayLongDate(), 64, H - 60);
+      ctx.fillText(todayLongDate(), 64, H - 300);
 
-      const link = document.createElement('a');
-      link.download = `dvolve-foto-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      const filename = `dvolve-foto-${Date.now()}.png`;
+      canvas.toBlob(async (blob) => {
+        if(!blob){ showAppNotice('⚠️ No se pudo generar la imagen. Probá de nuevo.', false); return; }
+        const file = new File([blob], filename, { type: 'image/png' });
+        // En celular: abre el panel nativo para "Guardar imagen" directo a Fotos.
+        if(navigator.canShare && navigator.canShare({ files: [file] })){
+          try{
+            await navigator.share({ files: [file] });
+            return;
+          }catch(err){
+            if(err && err.name === 'AbortError') return; // el usuario canceló, no es un error real
+            // si falla el share, seguimos con la descarga clásica como respaldo
+          }
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }, 'image/png');
   }
 
   function roundRectPath(ctx, x, y, w, h, r){
