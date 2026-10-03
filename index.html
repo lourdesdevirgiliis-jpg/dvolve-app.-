@@ -522,8 +522,13 @@
   body.viewer-mode .palette-grid,
   body.viewer-mode #add-user-form,
   body.viewer-mode .flyer-title,
+  body.viewer-mode .video-assign,
   body.viewer-mode .recipe-open-btn ~ .edit-photo{
     display: none !important;
+  }
+  /* El botón de E-books sigue visible para la alumna: es contenido para leer, no para editar */
+  body.viewer-mode .add-exercise-btn.ebooks-toggle-btn{
+    display: inline-block !important;
   }
   body.viewer-mode .exercise-video,
   body.viewer-mode .meal-media,
@@ -631,6 +636,33 @@
   .history-item:last-child{ border-bottom:none; }
   .history-item .date{ color:var(--gold); font-family: var(--font-serif); font-size:1rem; }
   .history-item .meta{ color:var(--ink-soft); }
+
+  /* ---- Comentarios alumna/coach ---- */
+  .comments-list{
+    display:flex; flex-direction:column; gap:10px; margin-bottom:16px;
+    max-height:360px; overflow-y:auto; padding-right:2px;
+  }
+  .comment-bubble{
+    padding:11px 15px; border-radius:14px; font-size:0.86rem; line-height:1.45;
+    max-width:82%; word-wrap:break-word;
+  }
+  .comment-bubble.alumna{
+    background: var(--card); border:1px solid var(--hairline); align-self:flex-start;
+    border-bottom-left-radius:4px;
+  }
+  .comment-bubble.coach{
+    background: var(--espresso); color:#F7F1E7; align-self:flex-end;
+    border-bottom-right-radius:4px;
+  }
+  .comment-bubble .comment-meta{
+    display:block; font-size:0.68rem; opacity:0.65; margin-top:5px; letter-spacing:0.02em;
+  }
+  .comment-empty{ font-size:0.85rem; color:var(--ink-soft); font-style:italic; padding:4px 0 12px; }
+  .comment-input{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--hairline);
+    background:var(--card); font-family:inherit; font-size:0.9rem; resize:vertical; margin-bottom:10px;
+  }
+  .comment-input:focus{ outline:none; border-color:var(--gold); }
 
   /* ---- Exercise cards (Entrenamiento) ---- */
   .exercise-card{
@@ -1110,6 +1142,23 @@
   .resource-card h4{ font-family: var(--font-serif); font-size:1.15rem; font-weight:500; margin:8px 0 4px; color:var(--espresso); }
   .resource-card p{ color:var(--ink-soft); font-size:0.82rem; }
 
+  .coaching-video-card{
+    border:1px solid var(--hairline); border-radius:14px; padding:20px;
+    background:var(--card); margin-bottom:22px;
+  }
+  .coaching-video-card .book-title{ font-size:1.2rem; margin-bottom:6px; }
+  .coaching-video-card .book-desc{ margin-bottom:16px; }
+  .coaching-video-card .exercise-video{ margin-bottom:0; }
+  .video-assign{
+    margin-top:16px; padding-top:14px; border-top:1px dashed var(--hairline);
+  }
+  .video-assign-label{ font-size:0.78rem; color:var(--ink-soft); margin-bottom:8px; }
+  .video-assign-item{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:0.85rem; margin:0 14px 8px 0; cursor:pointer;
+  }
+  .video-assign-item input{ cursor:pointer; }
+
   .podcast-item{
     display:flex; justify-content:space-between; align-items:center;
     padding:14px 0; border-bottom:1px solid var(--hairline);
@@ -1403,6 +1452,13 @@
         <div class="history-item"><span class="date">Sáb 11 Jul</span><span class="meta">Full body — completado</span></div>
         <div class="history-item"><span class="date">Jue 09 Jul</span><span class="meta">Tren inferior — completado</span></div>
       </div>
+      <div class="panel" id="comments-panel-entrenamiento">
+        <h2>Comentarios para tu coach</h2>
+        <p class="panel-sub">Dejale un mensaje sobre tu entrenamiento — lo va a ver y te puede responder acá mismo.</p>
+        <div class="comments-list" id="comments-list-entrenamiento"></div>
+        <textarea id="comment-input-entrenamiento" class="comment-input" placeholder="Escribí tu comentario…" rows="3"></textarea>
+        <button class="add-exercise-btn" id="comment-send-entrenamiento">Enviar comentario</button>
+      </div>
     </section>
 
     <!-- NUTRICIÓN -->
@@ -1442,6 +1498,13 @@
         <p class="panel-sub" data-tkey="shopping-sub" contenteditable="true">Organizada por grupo — marcá lo que ya compraste.</p>
         <div id="shopping-categories"></div>
         <p id="shopping-status" style="font-size:0.78rem;color:var(--ink-soft);margin-top:10px;"></p>
+      </div>
+      <div class="panel" id="comments-panel-nutricion">
+        <h2>Comentarios para tu coach</h2>
+        <p class="panel-sub">Dejale un mensaje sobre tu alimentación — lo va a ver y te puede responder acá mismo.</p>
+        <div class="comments-list" id="comments-list-nutricion"></div>
+        <textarea id="comment-input-nutricion" class="comment-input" placeholder="Escribí tu comentario…" rows="3"></textarea>
+        <button class="add-exercise-btn" id="comment-send-nutricion">Enviar comentario</button>
       </div>
     </section>
 
@@ -1526,37 +1589,19 @@
         <input type="file" accept="image/*,video/*">
       </div>
 
-      <div class="admin-tabs" id="coaching-tabs">
-        <button class="admin-tab active" data-ctab="ebooks">📚 E-books</button>
-        <button class="admin-tab" data-ctab="videos">🎬 Videos</button>
-        <button class="admin-tab" data-ctab="podcast">🎙️ Podcast</button>
-        <button class="admin-tab" data-ctab="material">📎 Material</button>
+      <div class="admin-tabs" id="coaching-month-tabs"></div>
+
+      <!-- MESES: videos personalizados por alumna -->
+      <div class="coaching-panel" id="coaching-months-panel">
+        <div id="coaching-month-videos"></div>
+        <button class="add-exercise-btn" id="add-coaching-video-btn">+ Agregar video a este mes</button>
       </div>
 
-      <!-- E-BOOKS: estantería -->
-      <div class="coaching-panel" id="coaching-ebooks">
+      <!-- E-BOOKS: opción extra, no es el contenido principal -->
+      <button class="add-exercise-btn ebooks-toggle-btn" id="toggle-ebooks-btn" style="margin-top:30px;">📚 E-books</button>
+      <div class="coaching-panel" id="coaching-ebooks" style="display:none">
         <div class="shelf" id="ebook-shelf"></div>
         <button class="add-exercise-btn" id="add-ebook-btn">+ Agregar e-book</button>
-      </div>
-
-      <!-- VIDEOS -->
-      <div class="coaching-panel" id="coaching-videos" style="display:none">
-        <div class="resource-grid" id="video-resource-grid"></div>
-        <button class="add-exercise-btn" id="add-video-btn">+ Agregar video</button>
-      </div>
-
-      <!-- PODCAST -->
-      <div class="coaching-panel" id="coaching-podcast" style="display:none">
-        <div class="panel">
-          <div id="podcast-list"></div>
-        </div>
-        <button class="add-exercise-btn" id="add-podcast-btn">+ Agregar episodio</button>
-      </div>
-
-      <!-- MATERIAL -->
-      <div class="coaching-panel" id="coaching-material" style="display:none">
-        <div class="resource-grid" id="material-resource-grid"></div>
-        <button class="add-exercise-btn" id="add-material-btn">+ Agregar material</button>
       </div>
     </section>
 
@@ -1680,6 +1725,23 @@
           </table>
         </div>
 
+        <div class="panel">
+          <h2>Corregir el email de una alumna</h2>
+          <p class="panel-sub">Para cuando escribiste mal el email al crear la cuenta. Esto actualiza sus datos guardados (lista de compras, plan de alimentación, objetivo de peso) para que sigan enganchados a ella. <strong>Ojo:</strong> esto NO cambia el email con el que ella entra a la app — eso se hace aparte, en Supabase (te lo explico si me decís que ya hiciste este paso).</p>
+          <form id="fix-email-form" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
+            <div class="field" style="margin-bottom:0;flex:1;min-width:180px;">
+              <label for="fix-email-old">Email viejo (el que está mal)</label>
+              <input type="email" id="fix-email-old" placeholder="email.viejo@gmail.com" required>
+            </div>
+            <div class="field" style="margin-bottom:0;flex:1;min-width:180px;">
+              <label for="fix-email-new">Email nuevo (correcto)</label>
+              <input type="email" id="fix-email-new" placeholder="email.correcto@gmail.com" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width:auto;padding:13px 26px;margin-top:0;">Actualizar datos</button>
+          </form>
+          <p id="fix-email-status" style="font-size:0.82rem;margin-top:12px;display:none;"></p>
+        </div>
+
         <div class="panel" id="plan-editor" style="display:none;">
           <h2 id="plan-editor-title">Plan semanal</h2>
           <p class="panel-sub">Asignale un entrenamiento a cada día. Lo que cambies acá (series, reps, pesos, descanso) vale solo para esta alumna — la plantilla original no se toca.</p>
@@ -1778,6 +1840,22 @@
           <h2>Registro de peso y sensaciones</h2>
           <p class="panel-sub">Lo que la alumna va escribiendo cada vez que registra su peso — así seguís su evolución mes a mes.</p>
           <div id="admin-feeling-log-list"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Comentarios — Entrenamiento</h2>
+          <p class="panel-sub">Lo que te escribió sobre su entrenamiento. Respondele acá mismo.</p>
+          <div class="comments-list" id="admin-comments-list-entrenamiento"></div>
+          <textarea id="admin-comment-input-entrenamiento" class="comment-input" placeholder="Escribí tu respuesta…" rows="2"></textarea>
+          <button class="add-exercise-btn" id="admin-comment-send-entrenamiento">Responder</button>
+        </div>
+
+        <div class="panel">
+          <h2>Comentarios — Nutrición</h2>
+          <p class="panel-sub">Lo que te escribió sobre su alimentación. Respondele acá mismo.</p>
+          <div class="comments-list" id="admin-comments-list-nutricion"></div>
+          <textarea id="admin-comment-input-nutricion" class="comment-input" placeholder="Escribí tu respuesta…" rows="2"></textarea>
+          <button class="add-exercise-btn" id="admin-comment-send-nutricion">Responder</button>
         </div>
       </div>
 
@@ -1905,6 +1983,8 @@
           </div>
           <div id="library-list"></div>
           <button class="add-exercise-btn" id="add-library-exercise-btn">+ Agregar ejercicio a la biblioteca</button>
+          <button class="add-exercise-btn" id="autofill-desc-btn" style="margin-left:0;">✨ Autocompletar descripciones (y las plantillas)</button>
+          <p id="autofill-desc-status" style="font-size:0.82rem;color:var(--ink-soft);margin-top:10px;line-height:1.5;"></p>
         </div>
       </div>
 
@@ -2843,16 +2923,11 @@
         { title:'Comer con calma', desc:'Fundamentos simples de nutrición consciente.' },
         { title:'Mentalidad de progreso', desc:'Herramientas para sostener la motivación real.' }
       ],
-      videos: [
-        { title:'Técnica de sentadilla', desc:'12 min · Fundamentos' },
-        { title:'Movilidad de cadera', desc:'8 min · Rutina diaria' }
-      ],
-      podcast: [
-        { ep:'EP. 12', title:'Constancia sobre perfección' },
-        { ep:'EP. 11', title:'Cómo leer tu propio progreso' }
-      ],
-      material: [
-        { title:'Planificador semanal', desc:'Descargable en PDF' }
+      months: [
+        { label:'Mes 1', videos: [] },
+        { label:'Mes 2', videos: [] },
+        { label:'Mes 3', videos: [] },
+        { label:'Mes 4', videos: [] }
       ]
     }
   };
@@ -3068,9 +3143,7 @@
       if(logoImg) logoImg.src = STATE.logoUrl;
     }
     renderEbooks();
-    renderVideos();
-    renderMaterial();
-    renderPodcast();
+    renderCoachingMonths();
     renderYoga();
     renderStretching();
     renderCategoryLabels();
@@ -3079,6 +3152,7 @@
     renderFlyerTitles();
     syncProgressPhotoCardText();
     loadGoalWeightInput();
+    loadMyComments();
     renderPaletteGrid();
     applyTheme(STATE.theme);
     initEditableText();
@@ -3412,6 +3486,54 @@
     }
   });
 
+  // ---- Corregir email de una alumna: migra sus datos guardados por email (lista de compras, plan, objetivo) ----
+  const fixEmailForm = document.getElementById('fix-email-form');
+  if(fixEmailForm){
+    fixEmailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const oldEmail = document.getElementById('fix-email-old').value.trim();
+      const newEmail = document.getElementById('fix-email-new').value.trim();
+      const statusEl = document.getElementById('fix-email-status');
+      statusEl.style.display = 'block';
+
+      if(!oldEmail || !newEmail || oldEmail === newEmail){
+        statusEl.style.color = '#A8446E';
+        statusEl.textContent = 'Revisá los dos emails: tienen que ser distintos y estar completos.';
+        return;
+      }
+
+      statusEl.style.color = 'var(--ink-soft)';
+      statusEl.textContent = 'Actualizando…';
+
+      let movedSomething = false;
+
+      // 1) Datos guardados en la app (lista de compras, plan de alimentación, objetivo, ficha)
+      [STATE.studentShoppingLists, STATE.studentNutritionFiles, STATE.studentGoals, STATE.studentProfiles].forEach(store => {
+        if(store && Object.prototype.hasOwnProperty.call(store, oldEmail)){
+          store[newEmail] = store[oldEmail];
+          delete store[oldEmail];
+          movedSomething = true;
+        }
+      });
+      if(movedSomething) saveState();
+
+      // 2) La tabla de perfiles (para que "Usuarios" y los selectores de alumna la muestren bien)
+      let profileUpdated = false;
+      try{
+        const { data, error } = await sb.from('profiles').update({ email: newEmail }).eq('email', oldEmail).select();
+        if(!error && data && data.length > 0) profileUpdated = true;
+      }catch(err){ /* seguimos igual, avisamos abajo */ }
+
+      statusEl.style.color = 'var(--gold)';
+      statusEl.textContent = movedSomething || profileUpdated
+        ? `Listo ✓ — sus datos ya quedaron con ${newEmail}. Recordá: esto NO cambia el email con el que ella entra a la app (eso se hace en Supabase, avisame si querés que te guíe).`
+        : `No encontré datos guardados con ${oldEmail}. Si ella nunca usó la lista de compras, el plan o el objetivo, puede que no haya nada que mover — igual revisá que el email esté bien escrito.`;
+
+      if(profileUpdated){ renderRealUsersTable(); refreshStudentSelects(); }
+      fixEmailForm.reset();
+    });
+  }
+
   async function renderRealUsersTable(){
     const tbody = document.getElementById('users-tbody');
     if(!tbody) return;
@@ -3601,6 +3723,138 @@
 
   // Crea una tarjeta de ejercicio reutilizable (vista alumna y constructor admin)
   // ---- Convierte un link de YouTube (normal, corto o Shorts) en un link para incrustar ----
+  // ---- Diccionario de descripciones cortas por ejercicio, para autocompletar biblioteca + plantillas ----
+  function normalizeExName(s){
+    return String(s || '')
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // saca acentos
+      .replace(/[^a-z0-9 ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  const EXERCISE_DESC_DICT = {
+    // Tren superior
+    'press militar con mancuernas': 'Parada o sentada, empujá las mancuernas hacia arriba sin arquear la zona lumbar.',
+    'press militar con barra': 'De pie, barra a la altura de los hombros, empujá hacia arriba manteniendo el core firme.',
+    'press banca': 'Acostada en el banco, bajá la barra o mancuernas al pecho controlando y empujá hacia arriba.',
+    'press de banca': 'Acostada en el banco, bajá la barra o mancuernas al pecho controlando y empujá hacia arriba.',
+    'press inclinado con mancuernas': 'Banco inclinado, bajá las mancuernas a la altura del pecho y empujá hacia arriba sin trabar los codos.',
+    'remo con mancuerna': 'Apoyo en banco, llevá el codo hacia atrás apretando la espalda al final del recorrido.',
+    'remo con barra': 'Tronco inclinado hacia adelante, tirá la barra hacia el abdomen apretando los omóplatos.',
+    'remo con polea': 'Sentada frente a la polea, tirá la manija hacia el abdomen apretando la espalda, sin balancear el torso.',
+    'remo en maquina': 'Pecho apoyado, tirá las manijas hacia atrás apretando los omóplatos al final del movimiento.',
+    'jalon al pecho': 'Sentada, tirá la barra hacia el pecho llevando los codos hacia abajo y atrás.',
+    'dominadas': 'Colgada de la barra, subí el mentón por encima apretando la espalda, bajá controlando.',
+    'dominadas asistidas': 'Con la ayuda de la máquina o banda, subí el mentón por encima de la barra apretando la espalda.',
+    'curl de biceps con mancuernas': 'De pie, codos pegados al cuerpo, subí las mancuernas sin balancear el torso.',
+    'curl de biceps con barra': 'De pie, codos fijos, subí la barra contrayendo el bíceps y bajá controlando.',
+    'curl martillo': 'De pie, mancuernas con agarre neutro (palmas enfrentadas), subí sin mover los codos.',
+    'triceps con polea': 'Apoyo en banco, llevá el codo hacia atrás apretando la espalda al final del recorrido.',
+    'triceps frances': 'Acostada o parada, bajá la mancuerna o barra detrás de la cabeza y extendé el brazo hacia arriba.',
+    'fondos en banco': 'Manos en el banco detrás tuyo, bajá el cuerpo doblando los codos y empujá para subir.',
+    'elevaciones laterales': 'De pie, mancuernas a los costados, subí los brazos hasta la altura de los hombros sin balancear.',
+    'elevaciones frontales': 'De pie, mancuernas al frente de los muslos, subí hasta la altura de los hombros controlando.',
+    'aperturas con mancuernas': 'Acostada en el banco, brazos semiflexionados, abrí y cerrá como abrazando algo grande.',
+    'face pull': 'Con la polea a la altura de la cara, tirá hacia vos separando las manos y apretando los omóplatos.',
+    // Tren inferior
+    'sentadilla goblet': 'Pies separados al ancho de cadera, mancuerna pegada al pecho, bajá manteniendo el pecho arriba.',
+    'sentadilla con barra': 'Barra en la espalda alta, bajá empujando la cadera hacia atrás sin que las rodillas se hundan hacia adentro.',
+    'sentadilla bulgara': 'Pie de atrás apoyado en un banco, bajá con la pierna de adelante hasta formar 90°.',
+    'hip thrust': 'Espalda apoyada en el banco, empujá con los talones y apretá el glúteo arriba.',
+    'peso muerto rumano': 'Piernas casi rectas, bajá la barra pegada a las piernas empujando la cadera hacia atrás.',
+    'peso muerto convencional': 'Agarrá la barra con la espalda recta, subí empujando con las piernas y extendiendo la cadera.',
+    'zancadas': 'Un paso largo hacia adelante, bajá hasta que ambas rodillas formen 90° y volvé al inicio.',
+    'lunges': 'Un paso largo hacia adelante, bajá hasta que ambas rodillas formen 90° y volvé al inicio.',
+    'prensa de piernas': 'Sentada en la máquina, empujá la plataforma con los talones sin trabar del todo las rodillas.',
+    'extension de cuadriceps': 'Sentada en la máquina, extendé las piernas al frente y bajá controlando el peso.',
+    'curl femoral': 'Acostada o sentada en la máquina, flexioná las rodillas llevando el peso hacia los glúteos.',
+    'elevacion de talones': 'De pie, subí los talones lo más alto posible y bajá controlando, sin rebotar.',
+    'gemelos': 'De pie, subí los talones lo más alto posible y bajá controlando, sin rebotar.',
+    'puente de gluteos': 'Acostada, pies apoyados, empujá la cadera hacia arriba apretando los glúteos.',
+    'abduccion de cadera': 'Sentada o de costado, separá la pierna hacia afuera contra la resistencia, controlando la vuelta.',
+    // HIIT
+    'burpees': 'Movimiento completo y explosivo, a ritmo alto durante todo el bloque.',
+    'mountain climbers': 'Posición de plancha, llevá las rodillas al pecho alternando rápido.',
+    'jumping jacks': 'De pie, saltá abriendo piernas y brazos a la vez, y volvé a juntar.',
+    'sentadilla con salto': 'Bajá en sentadilla y saltá con fuerza hacia arriba, aterrizá suave y repetí.',
+    'escaladores': 'Posición de plancha, llevá las rodillas al pecho alternando rápido.',
+    'skater jumps': 'Saltá de costado de un pie al otro, como patinando, manteniendo el equilibrio.',
+    'high knees': 'Corré en el lugar llevando las rodillas bien arriba, a ritmo rápido.',
+    'box jump': 'Saltá con los dos pies al cajón o superficie elevada, bajá con control.',
+    // Abdominales / Core
+    'plancha abdominal': 'Cuerpo alineado, abdomen contraído. No dejes caer la cadera.',
+    'plancha lateral': 'Apoyo en un antebrazo, cuerpo alineado de costado, sostené sin que la cadera caiga.',
+    'russian twist': 'Tronco inclinado hacia atrás, girá de lado a lado sin perder la postura.',
+    'crunch abdominal': 'Acostada, rodillas flexionadas, subí los hombros del piso contrayendo el abdomen.',
+    'elevacion de piernas': 'Acostada, subí las piernas rectas hasta 90° y bajá sin que la zona lumbar se despegue.',
+    'abdominales bicicleta': 'Acostada, pedaleá en el aire llevando el codo contrario a la rodilla que se acerca.',
+    'dead bug': 'Acostada boca arriba, extendé brazo y pierna opuestos sin despegar la zona lumbar del piso.',
+    'superman': 'Boca abajo, levantá brazos y piernas a la vez apretando la zona lumbar y los glúteos.'
+  };
+
+  function findExerciseDesc(name){
+    const key = normalizeExName(name);
+    if(!key) return null;
+    if(EXERCISE_DESC_DICT[key]) return EXERCISE_DESC_DICT[key];
+    // match flexible: por si el nombre tiene alguna palabra de más o de menos
+    const found = Object.keys(EXERCISE_DESC_DICT).find(dictKey => key.includes(dictKey) || dictKey.includes(key));
+    return found ? EXERCISE_DESC_DICT[found] : null;
+  }
+
+  function autofillExerciseDescriptions(){
+    const statusEl = document.getElementById('autofill-desc-status');
+    let matched = 0, notFound = [];
+    const nameToDesc = {}; // para después sincronizar las plantillas con la biblioteca
+
+    Object.keys(STATE.exerciseLibrary || {}).forEach(cat => {
+      (STATE.exerciseLibrary[cat] || []).forEach(ex => {
+        const desc = findExerciseDesc(ex.name);
+        if(desc){
+          ex.desc = desc;
+          nameToDesc[normalizeExName(ex.name)] = desc;
+          matched++;
+        } else if(ex.name && ex.name !== 'Nuevo ejercicio'){
+          notFound.push(ex.name);
+        }
+      });
+    });
+
+    // Plantillas: mismo texto que en la biblioteca, buscando por nombre exacto
+    let templateSynced = 0;
+    (STATE.workoutTemplates || []).forEach(tpl => {
+      (tpl.exercises || []).forEach(ex => {
+        const key = normalizeExName(ex.name);
+        if(nameToDesc[key]){
+          ex.desc = nameToDesc[key];
+          templateSynced++;
+        } else {
+          const desc = findExerciseDesc(ex.name);
+          if(desc){ ex.desc = desc; templateSynced++; }
+        }
+      });
+    });
+
+    saveState();
+    renderLibrary();
+    renderTemplateBuilder();
+
+    if(statusEl){
+      let msg = `Listo ✓ — completé ${matched} descripción(es) en la biblioteca`;
+      if(templateSynced) msg += ` y actualicé ${templateSynced} en tus plantillas`;
+      msg += '.';
+      if(notFound.length){
+        msg += ` No tengo una descripción lista para: ${notFound.join(', ')}. Decime esos nombres y te las agrego.`;
+      }
+      statusEl.textContent = msg;
+    }
+  }
+
+  const autofillDescBtn = document.getElementById('autofill-desc-btn');
+  if(autofillDescBtn){
+    autofillDescBtn.addEventListener('click', autofillExerciseDescriptions);
+  }
+
   function youtubeEmbedUrl(url){
     if(!url) return null;
     try{
@@ -4466,6 +4720,111 @@
     return cachedRealStudents;
   }
 
+  // ---- Comentarios alumna ↔ coach (tabla student_comments, ver 4-COMENTARIOS.sql) ----
+  function renderCommentBubble(c){
+    const div = document.createElement('div');
+    div.className = 'comment-bubble ' + (c.author === 'coach' ? 'coach' : 'alumna');
+    let dateTxt = '';
+    try{
+      dateTxt = new Date(c.created_at).toLocaleDateString('es-AR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    }catch(e){ dateTxt = ''; }
+    div.innerHTML = `${escapeHtml(c.message)}<span class="comment-meta">${c.author === 'coach' ? 'Coach' : 'Vos'} · ${dateTxt}</span>`;
+    return div;
+  }
+
+  async function loadComments(area, studentId, listElId){
+    const list = document.getElementById(listElId);
+    if(!list || !studentId) return;
+    list.innerHTML = '<p class="comment-empty">Cargando…</p>';
+    try{
+      const { data, error } = await sb.from('student_comments')
+        .select('*')
+        .eq('user_id', studentId)
+        .eq('area', area)
+        .order('created_at', { ascending: true });
+      if(error) throw error;
+      list.innerHTML = '';
+      if(!data || data.length === 0){
+        list.innerHTML = '<p class="comment-empty">Todavía no hay comentarios acá.</p>';
+        return;
+      }
+      data.forEach(c => list.appendChild(renderCommentBubble(c)));
+      list.scrollTop = list.scrollHeight;
+    }catch(err){
+      list.innerHTML = '<p class="comment-empty">No se pudieron cargar los comentarios. Si esto persiste, avisale a soporte técnico.</p>';
+    }
+  }
+
+  async function sendComment(area, studentId, author, text, btn){
+    if(!text || !text.trim() || !studentId) return false;
+    if(btn){ btn.disabled = true; }
+    try{
+      const { error } = await sb.from('student_comments').insert({
+        user_id: studentId, area, author, message: text.trim()
+      });
+      if(error) throw error;
+      return true;
+    }catch(err){
+      showAppNotice('⚠️ No se pudo enviar el comentario. Probá de nuevo.', false);
+      return false;
+    }finally{
+      if(btn){ btn.disabled = false; }
+    }
+  }
+
+  // Lado alumna: sus propios hilos de Entrenamiento y Nutrición
+  function loadMyComments(){
+    if(!currentUser || currentRole === 'coach') return;
+    loadComments('entrenamiento', currentUser.id, 'comments-list-entrenamiento');
+    loadComments('nutricion', currentUser.id, 'comments-list-nutricion');
+  }
+
+  ['entrenamiento', 'nutricion'].forEach(area => {
+    const btn = document.getElementById(`comment-send-${area}`);
+    const input = document.getElementById(`comment-input-${area}`);
+    if(btn && input){
+      btn.addEventListener('click', async () => {
+        if(!currentUser || currentRole === 'coach') return;
+        const ok = await sendComment(area, currentUser.id, 'alumna', input.value, btn);
+        if(ok){
+          input.value = '';
+          loadComments(area, currentUser.id, `comments-list-${area}`);
+        }
+      });
+    }
+  });
+
+  // Lado coach: hilos de la alumna elegida en "Datos de alumnas"
+  let adminCommentsStudentId = null;
+  function loadAdminComments(email){
+    const student = cachedRealStudents.find(s => s.email === email);
+    adminCommentsStudentId = student ? student.id : null;
+    if(!adminCommentsStudentId){
+      ['entrenamiento', 'nutricion'].forEach(area => {
+        const list = document.getElementById(`admin-comments-list-${area}`);
+        if(list) list.innerHTML = '<p class="comment-empty">Elegí una alumna para ver sus comentarios.</p>';
+      });
+      return;
+    }
+    loadComments('entrenamiento', adminCommentsStudentId, 'admin-comments-list-entrenamiento');
+    loadComments('nutricion', adminCommentsStudentId, 'admin-comments-list-nutricion');
+  }
+
+  ['entrenamiento', 'nutricion'].forEach(area => {
+    const btn = document.getElementById(`admin-comment-send-${area}`);
+    const input = document.getElementById(`admin-comment-input-${area}`);
+    if(btn && input){
+      btn.addEventListener('click', async () => {
+        if(!adminCommentsStudentId) return;
+        const ok = await sendComment(area, adminCommentsStudentId, 'coach', input.value, btn);
+        if(ok){
+          input.value = '';
+          loadComments(area, adminCommentsStudentId, `admin-comments-list-${area}`);
+        }
+      });
+    }
+  });
+
   function fillStudentSelect(select, students, onPick){
     if(!select) return;
     const prevValue = select.value;
@@ -4585,90 +4944,139 @@
     });
   }
 
-  function renderVideos(){
-    const grid = document.getElementById('video-resource-grid');
-    if(!grid) return;
-    grid.innerHTML = '';
-    STATE.coaching.videos.forEach((v, idx) => {
-      const card = document.createElement('div');
-      card.className = 'resource-card';
-      card.innerHTML = `
-        <span class="rtype">Video</span>
-        <h4 contenteditable="true" data-field="title">${v.title}</h4>
-        <p contenteditable="true" data-field="desc">${v.desc}</p>
-        <span class="book-remove" style="display:inline-block;margin-top:8px;">Eliminar</span>
-      `;
-      grid.appendChild(card);
-      card.querySelectorAll('[contenteditable]').forEach(el => {
-        el.addEventListener('blur', () => {
-          STATE.coaching.videos[idx][el.dataset.field] = el.textContent.trim();
-          saveState();
-        });
+  // ---- Coaching: videos personalizados por mes (4 meses, cada video asignado a alumnas puntuales) ----
+  let activeCoachingMonth = 0;
+
+  function renderCoachingMonthTabs(){
+    const wrap = document.getElementById('coaching-month-tabs');
+    if(!wrap || !STATE.coaching.months) return;
+    wrap.innerHTML = '';
+    STATE.coaching.months.forEach((m, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'admin-tab' + (idx === activeCoachingMonth ? ' active' : '');
+      btn.innerHTML = `<span contenteditable="true" data-field="label">${escapeHtml(m.label)}</span>`;
+      btn.addEventListener('click', (e) => {
+        if(e.target.closest('[contenteditable="true"]')) return;
+        activeCoachingMonth = idx;
+        renderCoachingMonths();
       });
-      card.querySelector('.book-remove').addEventListener('click', () => {
-        STATE.coaching.videos.splice(idx, 1);
+      const label = btn.querySelector('[contenteditable]');
+      label.addEventListener('click', e => e.stopPropagation());
+      label.addEventListener('blur', () => {
+        STATE.coaching.months[idx].label = label.textContent.trim() || m.label;
         saveState();
-        renderVideos();
       });
+      wrap.appendChild(btn);
     });
   }
 
-  function renderMaterial(){
-    const grid = document.getElementById('material-resource-grid');
-    if(!grid) return;
-    grid.innerHTML = '';
-    STATE.coaching.material.forEach((m, idx) => {
+  async function renderCoachingMonths(){
+    renderCoachingMonthTabs();
+    const container = document.getElementById('coaching-month-videos');
+    if(!container || !STATE.coaching.months) return;
+    const month = STATE.coaching.months[activeCoachingMonth];
+    if(!month) return;
+    const isCoach = currentRole === 'coach';
+    if(isCoach && cachedRealStudents.length === 0) await fetchRealStudents();
+    const myEmail = currentUser ? currentUser.email : null;
+    const entries = month.videos.map((v, idx) => ({ v, idx }))
+      .filter(({v}) => isCoach || (Array.isArray(v.assignedTo) && v.assignedTo.includes(myEmail)));
+
+    container.innerHTML = '';
+    if(entries.length === 0){
+      container.innerHTML = `<p class="comment-empty">${isCoach ? 'Todavía no hay videos en este mes.' : 'Todavía no tenés videos asignados en este mes.'}</p>`;
+      return;
+    }
+
+    entries.forEach(({v, idx}) => {
       const card = document.createElement('div');
-      card.className = 'resource-card';
+      card.className = 'coaching-video-card';
+      const ytEmbed = youtubeEmbedUrl(v.ytUrl);
+      let mediaHtml;
+      if(ytEmbed){
+        mediaHtml = `<iframe src="${ytEmbed}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      } else if(v.videoUrl && v.mediaIsVideo === false){
+        mediaHtml = `<img src="${v.videoUrl}" alt="">`;
+      } else if(v.videoUrl){
+        mediaHtml = `<video src="${v.videoUrl}" controls muted playsinline></video>`;
+      } else {
+        mediaHtml = `<div class="video-placeholder"><span class="plus">+</span>Subí foto<br>o video</div>`;
+      }
+      const assignRows = cachedRealStudents.map(s => `
+        <label class="video-assign-item">
+          <input type="checkbox" value="${escapeHtml(s.email)}" ${Array.isArray(v.assignedTo) && v.assignedTo.includes(s.email) ? 'checked' : ''}>
+          ${escapeHtml(s.name || s.email)}
+        </label>`).join('') || '<p class="comment-empty">Todavía no hay alumnas registradas.</p>';
+
       card.innerHTML = `
-        <span class="rtype">Material</span>
-        <h4 contenteditable="true" data-field="title">${m.title}</h4>
-        <p contenteditable="true" data-field="desc">${m.desc}</p>
-        <span class="book-remove" style="display:inline-block;margin-top:8px;">Eliminar</span>
+        <div class="book-title" contenteditable="true" data-field="title">${v.title}</div>
+        <div class="book-desc" contenteditable="true" data-field="desc">${v.desc}</div>
+        <div class="exercise-video">
+          ${mediaHtml}
+          <input type="file" accept="image/*,video/*">
+        </div>
+        <div class="exercise-yt-row">
+          <input type="text" class="exercise-yt-input" placeholder="O pegá el link de YouTube" value="${escapeHtml(v.ytUrl || '')}">
+        </div>
+        <span class="exercise-yt-label">Si subís un video Y pegás un link, se muestra el link de YouTube.</span>
+        <div class="video-assign">
+          <p class="video-assign-label">¿Quién puede ver este video?</p>
+          ${assignRows}
+        </div>
+        <span class="book-remove">Eliminar video</span>
       `;
-      grid.appendChild(card);
+      container.appendChild(card);
+
       card.querySelectorAll('[contenteditable]').forEach(el => {
         el.addEventListener('blur', () => {
-          STATE.coaching.material[idx][el.dataset.field] = el.textContent.trim();
+          month.videos[idx][el.dataset.field] = el.textContent.trim();
           saveState();
         });
       });
-      card.querySelector('.book-remove').addEventListener('click', () => {
-        STATE.coaching.material.splice(idx, 1);
-        saveState();
-        renderMaterial();
-      });
-    });
-  }
 
-  function renderPodcast(){
-    const list = document.getElementById('podcast-list');
-    if(!list) return;
-    list.innerHTML = '';
-    STATE.coaching.podcast.forEach((p, idx) => {
-      const item = document.createElement('div');
-      item.className = 'podcast-item';
-      item.innerHTML = `
-        <div>
-          <span class="ep" contenteditable="true" data-field="ep">${p.ep}</span>
-          <h4 contenteditable="true" data-field="title">${p.title}</h4>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;">
-          <span class="book-remove">Eliminar</span>
-          <div class="play-btn">▶</div>
-        </div>
-      `;
-      list.appendChild(item);
-      item.querySelectorAll('[contenteditable]').forEach(el => {
-        el.addEventListener('blur', () => {
-          STATE.coaching.podcast[idx][el.dataset.field] = el.textContent.trim();
+      const videoBox = card.querySelector('.exercise-video');
+      const fileInput = card.querySelector('input[type="file"]');
+      videoBox.addEventListener('click', () => { if(!videoBox.querySelector('video, img, iframe')) fileInput.click(); });
+      fileInput.addEventListener('click', e => e.stopPropagation());
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if(!file) return;
+        const isVideo = isVideoFile(file);
+        const placeholder = videoBox.querySelector('.video-placeholder');
+        if(placeholder) placeholder.textContent = 'Subiendo…';
+        const url = await uploadFileToStorage(file, 'coaching-videos');
+        if(url){
+          month.videos[idx].videoUrl = url;
+          month.videos[idx].mediaIsVideo = isVideo;
+          saveState();
+          renderCoachingMonths();
+        } else if(placeholder){
+          placeholder.innerHTML = '<span class="plus">+</span>No se pudo subir,<br>probá de nuevo';
+        }
+      });
+
+      const ytInput = card.querySelector('.exercise-yt-input');
+      ytInput.addEventListener('blur', () => {
+        month.videos[idx].ytUrl = ytInput.value.trim();
+        saveState();
+      });
+
+      card.querySelectorAll('.video-assign-item input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if(!Array.isArray(month.videos[idx].assignedTo)) month.videos[idx].assignedTo = [];
+          const email = cb.value;
+          const list = month.videos[idx].assignedTo;
+          const pos = list.indexOf(email);
+          if(cb.checked && pos === -1) list.push(email);
+          else if(!cb.checked && pos !== -1) list.splice(pos, 1);
           saveState();
         });
       });
-      item.querySelector('.book-remove').addEventListener('click', () => {
-        STATE.coaching.podcast.splice(idx, 1);
+
+      card.querySelector('.book-remove').addEventListener('click', () => {
+        month.videos.splice(idx, 1);
         saveState();
-        renderPodcast();
+        renderCoachingMonths();
       });
     });
   }
@@ -4678,32 +5086,24 @@
     saveState();
     renderEbooks();
   });
-  document.getElementById('add-video-btn').addEventListener('click', () => {
-    STATE.coaching.videos.push({ title:'Nuevo video', desc:'Descripción breve.' });
-    saveState();
-    renderVideos();
-  });
-  document.getElementById('add-material-btn').addEventListener('click', () => {
-    STATE.coaching.material.push({ title:'Nuevo material', desc:'Descargable.' });
-    saveState();
-    renderMaterial();
-  });
-  document.getElementById('add-podcast-btn').addEventListener('click', () => {
-    STATE.coaching.podcast.push({ ep:'EP. ' + (STATE.coaching.podcast.length + 1), title:'Nuevo episodio' });
-    saveState();
-    renderPodcast();
-  });
-
-  document.querySelectorAll('#coaching-tabs .admin-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('#coaching-tabs .admin-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const target = 'coaching-' + tab.dataset.ctab;
-      document.querySelectorAll('.coaching-panel').forEach(p => {
-        p.style.display = (p.id === target) ? 'block' : 'none';
-      });
+  const addCoachingVideoBtn = document.getElementById('add-coaching-video-btn');
+  if(addCoachingVideoBtn){
+    addCoachingVideoBtn.addEventListener('click', () => {
+      const month = STATE.coaching.months[activeCoachingMonth];
+      if(!month) return;
+      month.videos.push({ title:'Nuevo video', desc:'Descripción breve.', ytUrl:'', videoUrl:'', mediaIsVideo:true, assignedTo:[] });
+      saveState();
+      renderCoachingMonths();
     });
-  });
+  }
+  const toggleEbooksBtn = document.getElementById('toggle-ebooks-btn');
+  if(toggleEbooksBtn){
+    toggleEbooksBtn.addEventListener('click', () => {
+      const panel = document.getElementById('coaching-ebooks');
+      if(!panel) return;
+      panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+    });
+  }
 
   // ---- Tema: colores y tipografía ----
   // ---- Paletas cálidas predefinidas ----
@@ -5113,6 +5513,7 @@
       const field = el.dataset.field;
       el.value = (profile[section] && profile[section][field]) ? profile[section][field] : '';
     });
+    loadAdminComments(email);
   }
 
   const studentSelect = document.getElementById('student-select');
