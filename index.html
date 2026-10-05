@@ -1983,7 +1983,7 @@
           </div>
           <div id="library-list"></div>
           <button class="add-exercise-btn" id="add-library-exercise-btn">+ Agregar ejercicio a la biblioteca</button>
-          <button class="add-exercise-btn" id="autofill-desc-btn" style="margin-left:0;">✨ Autocompletar descripciones (y las plantillas)</button>
+          <button class="add-exercise-btn" id="autofill-desc-btn" style="margin-left:0;">✨ Autocompletar descripciones (biblioteca, plantillas y planes de alumnas)</button>
           <p id="autofill-desc-status" style="font-size:0.82rem;color:var(--ink-soft);margin-top:10px;line-height:1.5;"></p>
         </div>
       </div>
@@ -3761,7 +3761,13 @@
     'sentadilla goblet': 'Pies separados al ancho de cadera, mancuerna pegada al pecho, bajá manteniendo el pecho arriba.',
     'sentadilla con barra': 'Barra en la espalda alta, bajá empujando la cadera hacia atrás sin que las rodillas se hundan hacia adentro.',
     'sentadilla bulgara': 'Pie de atrás apoyado en un banco, bajá con la pierna de adelante hasta formar 90°.',
+    'bulgara con mancuerna': 'Pie de atrás apoyado en un banco, mancuernas a los costados, bajá con la pierna de adelante hasta formar 90°.',
+    'bulgaras con mancuerna': 'Pie de atrás apoyado en un banco, mancuernas a los costados, bajá con la pierna de adelante hasta formar 90°.',
+    'zancada bulgara': 'Pie de atrás apoyado en un banco, bajá con la pierna de adelante hasta formar 90°.',
     'hip thrust': 'Espalda apoyada en el banco, empujá con los talones y apretá el glúteo arriba.',
+    'hip thrust con barra': 'Espalda apoyada en el banco, barra sobre la cadera, empujá con los talones y apretá el glúteo arriba.',
+    'hip trust': 'Espalda apoyada en el banco, empujá con los talones y apretá el glúteo arriba.',
+    'hip trust con barra': 'Espalda apoyada en el banco, barra sobre la cadera, empujá con los talones y apretá el glúteo arriba.',
     'peso muerto rumano': 'Piernas casi rectas, bajá la barra pegada a las piernas empujando la cadera hacia atrás.',
     'peso muerto convencional': 'Agarrá la barra con la espalda recta, subí empujando con las piernas y extendiendo la cadera.',
     'zancadas': 'Un paso largo hacia adelante, bajá hasta que ambas rodillas formen 90° y volvé al inicio.',
@@ -3802,10 +3808,54 @@
     return found ? EXERCISE_DESC_DICT[found] : null;
   }
 
-  function autofillExerciseDescriptions(){
+  // Recorre los planes YA asignados a cada alumna real (tabla student_routines) y les
+  // actualiza la descripción de cada ejercicio para que coincida con la biblioteca.
+  // Así no hace falta reasignar nada: a la alumna que ya tiene su semana armada también le llega.
+  async function syncDescriptionsToStudentPlans(nameToDesc){
+    let studentsUpdated = 0, exercisesUpdated = 0;
+    let students = [];
+    try{ students = await fetchRealStudents(); }catch(err){ return { studentsUpdated, exercisesUpdated }; }
+
+    for(const student of students){
+      try{
+        const { data } = await sb.from('student_routines').select('training_plan').eq('user_id', student.id).single();
+        if(!data || !data.training_plan || !data.training_plan.week) continue;
+        const week = data.training_plan.week;
+        let changed = false;
+        Object.keys(week).forEach(day => {
+          const assigned = week[day];
+          if(!assigned || !Array.isArray(assigned.exercises)) return;
+          assigned.exercises.forEach(ex => {
+            const key = normalizeExName(ex.name);
+            const desc = nameToDesc[key] || findExerciseDesc(ex.name);
+            if(desc && ex.desc !== desc){
+              ex.desc = desc;
+              changed = true;
+              exercisesUpdated++;
+            }
+          });
+        });
+        if(changed){
+          const { error } = await sb.from('student_routines').upsert({
+            user_id: student.id,
+            training_plan: { week },
+            updated_at: new Date().toISOString()
+          });
+          if(!error) studentsUpdated++;
+        }
+      }catch(err){ /* esta alumna todavía no tiene plan guardado, seguimos con la próxima */ }
+    }
+    return { studentsUpdated, exercisesUpdated };
+  }
+
+  async function autofillExerciseDescriptions(){
     const statusEl = document.getElementById('autofill-desc-status');
+    const btn = document.getElementById('autofill-desc-btn');
+    if(btn) btn.disabled = true;
+    if(statusEl) statusEl.textContent = 'Completando descripciones…';
+
     let matched = 0, notFound = [];
-    const nameToDesc = {}; // para después sincronizar las plantillas con la biblioteca
+    const nameToDesc = {}; // para después sincronizar plantillas y planes con la biblioteca
 
     Object.keys(STATE.exerciseLibrary || {}).forEach(cat => {
       (STATE.exerciseLibrary[cat] || []).forEach(ex => {
@@ -3839,12 +3889,29 @@
     renderLibrary();
     renderTemplateBuilder();
 
+    if(statusEl) statusEl.textContent = 'Listo con la biblioteca y las plantillas — ahora actualizando los planes ya asignados a cada alumna, un momento…';
+
+    const { studentsUpdated, exercisesUpdated } = await syncDescriptionsToStudentPlans(nameToDesc);
+
+    // Si hay un plan de alumna abierto en este momento, lo refrescamos para que se vea ya actualizado
+    if(typeof planStudent !== 'undefined' && planStudent && typeof renderPlanDay === 'function'){
+      try{
+        const { data } = await sb.from('student_routines').select('training_plan').eq('user_id', planStudent.id).single();
+        if(data && data.training_plan && data.training_plan.week){
+          planWeek = Object.assign(emptyWeekPlan(), data.training_plan.week);
+          renderPlanDay();
+        }
+      }catch(err){ /* no pasa nada, sigue con lo que tenía en pantalla */ }
+    }
+
+    if(btn) btn.disabled = false;
     if(statusEl){
       let msg = `Listo ✓ — completé ${matched} descripción(es) en la biblioteca`;
-      if(templateSynced) msg += ` y actualicé ${templateSynced} en tus plantillas`;
+      if(templateSynced) msg += `, actualicé ${templateSynced} en tus plantillas`;
+      if(exercisesUpdated) msg += `, y actualicé ${exercisesUpdated} ejercicio(s) ya asignados en ${studentsUpdated} alumna(s)`;
       msg += '.';
       if(notFound.length){
-        msg += ` No tengo una descripción lista para: ${notFound.join(', ')}. Decime esos nombres y te las agrego.`;
+        msg += ` No tengo una descripción lista para: ${notFound.join(', ')}. Decime esos nombres tal cual los escribiste y te las agrego.`;
       }
       statusEl.textContent = msg;
     }
