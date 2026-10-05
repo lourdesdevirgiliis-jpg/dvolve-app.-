@@ -3847,11 +3847,41 @@
     { test: /\bprensa\b/, desc: 'Sentada en la máquina, empujá la plataforma con los talones sin trabar del todo las rodillas al extender.' }
   ];
 
+  // Zona/músculo que se menciona en el nombre, para armar el último respaldo si ninguna
+  // regla de movimiento matcheó (ej: un nombre muy propio o mal escrito).
+  const EXERCISE_ZONE_HINTS = [
+    { test: /\b(cuadricep|pierna|gluteo|femoral|cadera|sentadilla|zancada)\b/, zone: 'tren inferior' },
+    { test: /\b(hombro|pecho|espalda|dorsal|bicep|tricep|brazo|antebrazo)\b/, zone: 'tren superior' },
+    { test: /\b(abdomen|abdominal|core|oblicuo|lumbar)\b/, zone: 'core' },
+    { test: /\b(cardio|full body|hit|circuito)\b/, zone: 'full body' }
+  ];
+  const EXERCISE_EQUIPMENT_HINTS = [
+    { test: /\bmancuerna/, eq: 'las mancuernas' },
+    { test: /\bbarra\b/, eq: 'la barra' },
+    { test: /\bpolea\b/, eq: 'la polea' },
+    { test: /\bmaquina\b/, eq: 'la máquina' },
+    { test: /\bbanda/, eq: 'la banda elástica' },
+    { test: /\bkettlebell|pesa rusa/, eq: 'la pesa rusa' },
+    { test: /\bdisco\b/, eq: 'el disco' },
+    { test: /\bpeso corporal|sin elementos/, eq: 'el peso del cuerpo' }
+  ];
+
   function generateGenericExerciseDesc(name){
     const key = normalizeExName(name);
     if(!key) return null;
     const rule = EXERCISE_PATTERN_RULES.find(r => r.test.test(key));
-    return rule ? rule.desc : null;
+    if(rule) return rule.desc;
+
+    // Último respaldo: ninguna regla de movimiento reconoció el nombre (propio, mal escrito, etc).
+    // Igual generamos una descripción técnica genérica pero útil, usando la zona y el
+    // equipamiento si se mencionan en el nombre, para que NINGÚN ejercicio quede sin descripción.
+    const zoneHit = EXERCISE_ZONE_HINTS.find(z => z.test.test(key));
+    const eqHit = EXERCISE_EQUIPMENT_HINTS.find(e => e.test.test(key));
+    const eqTxt = eqHit ? eqHit.eq : 'la carga indicada';
+    if(zoneHit){
+      return `Ejercicio de ${zoneHit.zone}: realizá el movimiento con ${eqTxt} de forma controlada, en todo el rango posible, sin compensar con otras zonas del cuerpo ni usar impulso.`;
+    }
+    return `Realizá el movimiento con ${eqTxt} de forma controlada, manteniendo buena postura durante todo el recorrido y sin usar impulso.`;
   }
 
   function findExerciseDesc(name){
@@ -3862,6 +3892,8 @@
     const found = Object.keys(EXERCISE_DESC_DICT).find(dictKey => key.includes(dictKey) || dictKey.includes(key));
     if(found) return EXERCISE_DESC_DICT[found];
     // Si no hay match exacto ni parcial, reconocemos el patrón de movimiento por palabras clave
+    // (y si tampoco hay patrón reconocible, generateGenericExerciseDesc igual arma algo con la
+    // zona/equipamiento mencionados, así nunca queda un ejercicio sin descripción).
     return generateGenericExerciseDesc(name);
   }
 
@@ -3909,36 +3941,28 @@
     const statusEl = document.getElementById('autofill-desc-status');
     const btn = document.getElementById('autofill-desc-btn');
     if(btn) btn.disabled = true;
-    if(statusEl) statusEl.textContent = 'Completando descripciones…';
 
-    let matched = 0, notFound = [];
     const nameToDesc = {}; // para después sincronizar plantillas y planes con la biblioteca
+    const isPlaceholderName = n => !n || !n.trim() || n.trim() === 'Nuevo ejercicio';
 
     Object.keys(STATE.exerciseLibrary || {}).forEach(cat => {
       (STATE.exerciseLibrary[cat] || []).forEach(ex => {
+        if(isPlaceholderName(ex.name)) return; // todavía no le puso nombre, no inventamos nada
         const desc = findExerciseDesc(ex.name);
         if(desc){
           ex.desc = desc;
           nameToDesc[normalizeExName(ex.name)] = desc;
-          matched++;
-        } else if(ex.name && ex.name !== 'Nuevo ejercicio'){
-          notFound.push(ex.name);
         }
       });
     });
 
     // Plantillas: mismo texto que en la biblioteca, buscando por nombre exacto
-    let templateSynced = 0;
     (STATE.workoutTemplates || []).forEach(tpl => {
       (tpl.exercises || []).forEach(ex => {
+        if(isPlaceholderName(ex.name)) return;
         const key = normalizeExName(ex.name);
-        if(nameToDesc[key]){
-          ex.desc = nameToDesc[key];
-          templateSynced++;
-        } else {
-          const desc = findExerciseDesc(ex.name);
-          if(desc){ ex.desc = desc; templateSynced++; }
-        }
+        const desc = nameToDesc[key] || findExerciseDesc(ex.name);
+        if(desc) ex.desc = desc;
       });
     });
 
@@ -3946,9 +3970,7 @@
     renderLibrary();
     renderTemplateBuilder();
 
-    if(statusEl) statusEl.textContent = 'Listo con la biblioteca y las plantillas — ahora actualizando los planes ya asignados a cada alumna, un momento…';
-
-    const { studentsUpdated, exercisesUpdated } = await syncDescriptionsToStudentPlans(nameToDesc);
+    await syncDescriptionsToStudentPlans(nameToDesc);
 
     // Si hay un plan de alumna abierto en este momento, lo refrescamos para que se vea ya actualizado
     if(typeof planStudent !== 'undefined' && planStudent && typeof renderPlanDay === 'function'){
@@ -3962,16 +3984,6 @@
     }
 
     if(btn) btn.disabled = false;
-    if(statusEl){
-      let msg = `Listo ✓ — completé ${matched} descripción(es) en la biblioteca`;
-      if(templateSynced) msg += `, actualicé ${templateSynced} en tus plantillas`;
-      if(exercisesUpdated) msg += `, y actualicé ${exercisesUpdated} ejercicio(s) ya asignados en ${studentsUpdated} alumna(s)`;
-      msg += '.';
-      if(notFound.length){
-        msg += ` No tengo una descripción lista para: ${notFound.join(', ')}. Decime esos nombres tal cual los escribiste y te las agrego.`;
-      }
-      statusEl.textContent = msg;
-    }
   }
 
   const autofillDescBtn = document.getElementById('autofill-desc-btn');
