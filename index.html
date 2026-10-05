@@ -3801,13 +3801,68 @@
     'superman': 'Boca abajo, levantá brazos y piernas a la vez apretando la zona lumbar y los glúteos.'
   };
 
+  // Reconoce el PATRÓN de movimiento por palabras clave en el nombre, y arma una
+  // descripción técnica razonable aunque el nombre exacto no esté en EXERCISE_DESC_DICT.
+  // Así ningún ejercicio se queda sin descripción, aunque la coach le haya puesto
+  // un nombre propio o una variante (ej: "Sentadilla sumo en altura con disco").
+  const EXERCISE_PATTERN_RULES = [
+    { test: /\bsumo\b/, desc: 'Pies bien separados y apuntando hacia afuera, bajá manteniendo el pecho arriba y las rodillas en la misma dirección que los pies.' },
+    { test: /\b(sentadilla|squat)\b.*\b(salto|jump)\b|\b(salto|jump)\b.*\bsentadilla\b/, desc: 'Bajá en sentadilla y saltá con fuerza hacia arriba, aterrizá suave y volvé a bajar controlando.' },
+    { test: /\bbulgar/, desc: 'Pie de atrás apoyado en un banco, bajá con la pierna de adelante hasta formar 90° sin que la rodilla se hunda hacia adentro.' },
+    { test: /\b(sentadilla|squat)\b/, desc: 'Pies al ancho de cadera, bajá empujando la cadera hacia atrás y manteniendo el pecho arriba, sin que las rodillas se hundan hacia adentro.' },
+    { test: /\bpeso muerto\b.*ruman|ruman.*\bpeso muerto\b/, desc: 'Piernas casi rectas, bajá la carga pegada a las piernas empujando la cadera hacia atrás hasta sentir el isquiotibial.' },
+    { test: /\bpeso muerto\b/, desc: 'Agarrá la carga con la espalda recta y neutra, subí empujando con las piernas y extendiendo la cadera, sin redondear la zona lumbar.' },
+    { test: /\b(zancada|lunge|estocada)\b/, desc: 'Un paso largo hacia adelante (o atrás, según la variante), bajá hasta que ambas rodillas formen 90° y volvé con control al inicio.' },
+    { test: /\bhip tr[uh]st\b|\bpuente de gluteo/, desc: 'Espalda apoyada en el banco (o en el piso), empujá con los talones y apretá el glúteo arriba del movimiento.' },
+    { test: /\b(press)\b.*\b(militar|hombro)\b|\b(militar|hombro)\b.*\bpress\b/, desc: 'Parada o sentada, empujá la carga hacia arriba por encima de la cabeza sin arquear la zona lumbar.' },
+    { test: /\bpress\b.*\b(banca|pecho|inclinad)\b|\b(banca|pecho|inclinad)\b.*\bpress\b/, desc: 'Acostada en el banco, bajá la carga controlando hasta el pecho y empujá hacia arriba sin trabar los codos del todo.' },
+    { test: /\bpress\b/, desc: 'Empujá la carga de forma controlada hasta extender bien el brazo, sin trabar la articulación al final.' },
+    { test: /\bremo\b/, desc: 'Tronco estable, tirá la carga hacia el torso llevando el codo hacia atrás y apretando la espalda al final del recorrido.' },
+    { test: /\bjalo?n\b/, desc: 'Sentada, tirá la barra o manija hacia el cuerpo llevando los codos hacia abajo y atrás, sin balancear el torso.' },
+    { test: /\bdominada/, desc: 'Colgada de la barra, subí hasta pasar el mentón por arriba apretando la espalda, y bajá controlando el descenso.' },
+    { test: /\bfondo/, desc: 'Apoyo en banco o paralelas, bajá el cuerpo doblando los codos y empujá para volver arriba sin hundir los hombros.' },
+    { test: /\b(flexion|push ?up|lagartija)\b/, desc: 'Cuerpo alineado de la cabeza a los talones, bajá controlando hasta casi tocar el piso y empujá para volver arriba.' },
+    { test: /\bcurl\b.*\bfemoral\b|\bfemoral\b.*\bcurl\b/, desc: 'Acostada o sentada en la máquina, flexioná las rodillas llevando el peso hacia los glúteos, sin despegar la cadera.' },
+    { test: /\bcurl\b/, desc: 'Codos fijos pegados al cuerpo, subí la carga contrayendo el músculo y bajá controlando, sin balancear el torso.' },
+    { test: /\bextension\b.*cuadricep|cuadricep.*extension/, desc: 'Sentada en la máquina, extendé las piernas al frente contrayendo el cuádriceps y bajá controlando el peso.' },
+    { test: /\bextension\b.*tricep|tricep.*extension|\btricep/, desc: 'Codo fijo, extendé el brazo estirando bien al final sin mover el hombro, y volvé controlando.' },
+    { test: /\bextension\b/, desc: 'Extendé la articulación de forma controlada hasta el final del recorrido, y volvé sin soltar el peso de golpe.' },
+    { test: /\belevacion\b.*\b(lateral|hombro)\b|\blateral\b.*elevacion/, desc: 'De pie, carga a los costados, subí los brazos hasta la altura de los hombros sin balancear el cuerpo.' },
+    { test: /\belevacion\b.*\b(frontal)\b/, desc: 'De pie, carga al frente de los muslos, subí hasta la altura de los hombros controlando el movimiento.' },
+    { test: /\belevacion\b.*\b(pierna|talon|gemelo|pantorrilla)\b/, desc: 'Movimiento controlado en toda su amplitud, subiendo lo más arriba posible y bajando sin rebotar.' },
+    { test: /\belevacion\b/, desc: 'Subí la carga de forma controlada hasta la altura indicada, sin usar impulso del resto del cuerpo.' },
+    { test: /\b(gemelo|pantorrilla|talon)\b/, desc: 'De pie, subí los talones lo más alto posible contrayendo la pantorrilla y bajá controlando, sin rebotar.' },
+    { test: /\babducc/, desc: 'Separá la pierna hacia afuera contra la resistencia de forma controlada, y volvé sin soltar de golpe.' },
+    { test: /\baducc/, desc: 'Llevá la pierna hacia el centro del cuerpo contra la resistencia de forma controlada, y volvé sin soltar de golpe.' },
+    { test: /\bplancha\b.*lateral|lateral.*plancha/, desc: 'Apoyo en un antebrazo, cuerpo alineado de costado, sostené sin que la cadera caiga ni se eleve de más.' },
+    { test: /\bplancha\b/, desc: 'Cuerpo alineado de la cabeza a los talones, abdomen contraído, sin dejar caer ni levantar de más la cadera.' },
+    { test: /\b(crunch|abdominal)\b/, desc: 'Acostada, rodillas flexionadas, subí los hombros del piso contrayendo el abdomen, sin tironear del cuello.' },
+    { test: /\b(giro|twist|rotacion)\b/, desc: 'Tronco estable, girá de forma controlada de un lado al otro sin perder la postura de la espalda.' },
+    { test: /\bburpee\b/, desc: 'Movimiento completo y explosivo (sentadilla, plancha, salto), a ritmo constante durante todo el bloque.' },
+    { test: /\b(salto|jump)\b/, desc: 'Saltá con control, aterrizando suave con las rodillas semiflexionadas para amortiguar el impacto.' },
+    { test: /\bmountain climber|escalador/, desc: 'Posición de plancha, llevá las rodillas al pecho alternando rápido sin que la cadera suba de más.' },
+    { test: /\bencogimiento|shrug/, desc: 'De pie, carga a los costados, subí los hombros hacia las orejas y bajá controlando, sin rotar el cuello.' },
+    { test: /\bface pull\b/, desc: 'Con la polea a la altura de la cara, tirá hacia vos separando las manos y apretando los omóplatos al final.' },
+    { test: /\bhiperextension|lumbar/, desc: 'Apoyo en el banco de hiperextensiones, bajá el torso controlando y subí apretando glúteo y zona lumbar, sin hiperextender de más.' },
+    { test: /\bprensa\b/, desc: 'Sentada en la máquina, empujá la plataforma con los talones sin trabar del todo las rodillas al extender.' }
+  ];
+
+  function generateGenericExerciseDesc(name){
+    const key = normalizeExName(name);
+    if(!key) return null;
+    const rule = EXERCISE_PATTERN_RULES.find(r => r.test.test(key));
+    return rule ? rule.desc : null;
+  }
+
   function findExerciseDesc(name){
     const key = normalizeExName(name);
     if(!key) return null;
     if(EXERCISE_DESC_DICT[key]) return EXERCISE_DESC_DICT[key];
     // match flexible: por si el nombre tiene alguna palabra de más o de menos
     const found = Object.keys(EXERCISE_DESC_DICT).find(dictKey => key.includes(dictKey) || dictKey.includes(key));
-    return found ? EXERCISE_DESC_DICT[found] : null;
+    if(found) return EXERCISE_DESC_DICT[found];
+    // Si no hay match exacto ni parcial, reconocemos el patrón de movimiento por palabras clave
+    return generateGenericExerciseDesc(name);
   }
 
   // Recorre los planes YA asignados a cada alumna real (tabla student_routines) y les
