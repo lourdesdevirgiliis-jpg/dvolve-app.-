@@ -1,0 +1,965 @@
+<!doctype html><html><head><meta charset="utf-8"><title>La voz de tu plato — DVOLVE</title><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Concepto: recorrido horizontal. Cada tema abre con un panel de título y una ilustración, y sigue con paneles de contenido corto.
+   Paleta cálida: crema, arena, durazno, dorado suave, lila polvo y cacao. Motivo: el plato visto desde arriba con una onda de voz. */
+:root{
+  --frame:#46353F; --cocoa:#4E3C47; --cream:#F7EFE4; --gold:#C9AE7C; --gold-soft:#D8C196; --mauve:#7D6989;
+  --gl:44px; --gr:44px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+/* Lienzo fijo 9:16 (720x1280) que se escala para entrar entero en la ventana, como una foto horizontal */
+.vp{position:relative;width:100%;height:100%;overflow:hidden;background:#3A2B34}
+.canvas{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform:translate(-50%,-50%) scale(var(--s,1));transform-origin:center center;background:var(--frame);overflow:hidden}
+body{margin:0;background:var(--frame);color:var(--cream);font-family:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:1.3rem;line-height:1.45;overflow:hidden}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--gold-soft);outline-offset:3px}
+
+.t-cream{--bg:#F7EFE4;--ink:#4A3340;--text:#5E4D57;--accent:#7A6086;--card:#FDF8F0;--line:#E2D4BE;--chip:#EDE1CF;--pill:#7A6086;--pill-fg:#FFF8EE;--art-bg:#EBDDC6}
+.t-sand{--bg:#EBDDC6;--ink:#4A3340;--text:#5A4852;--accent:#6E5478;--card:#F5ECDC;--line:#D2BF9C;--chip:#DFCFB2;--pill:#6E5478;--pill-fg:#FFF8EE;--art-bg:#F7EFE4}
+.t-blush{--bg:#F0D9CF;--ink:#4A3340;--text:#5E4A52;--accent:#7A4F66;--card:#F8EAE3;--line:#DDBFB2;--chip:#E8CABD;--pill:#7A4F66;--pill-fg:#FFF5EE;--art-bg:#F8EAE3}
+.t-mauve{--bg:#9A86A4;--ink:#2F2230;--text:#2F2230;--accent:#3D2A48;--card:#AC9BB5;--line:#7F6B8A;--chip:#B4A4BD;--pill:#3D2A48;--pill-fg:#F7EFE4;--art-bg:#E6DCEB}
+.t-gold{--bg:#CDB88F;--ink:#3F2E3A;--text:#43323D;--accent:#5A3E58;--card:#D9C7A3;--line:#A98F5E;--chip:#C2AB7F;--pill:#5A3E58;--pill-fg:#F7EFE4;--art-bg:#F1E6CF}
+.t-cocoa{--bg:#4E3C47;--ink:#F7EFE4;--text:#E9DFE2;--accent:#E8C98F;--card:#5D4955;--line:#7D6874;--chip:#6B5764;--pill:#E8C98F;--pill-fg:#3F2E3A;--art-bg:#5D4955}
+
+.app{height:100%;display:flex;flex-direction:column}
+.top{flex:none;display:flex;align-items:center;gap:14px;padding-block:8px;padding-left:var(--gl);padding-right:var(--gr)}
+.logo{flex:none;height:38px;width:auto;display:block}
+.bar{flex:1;min-width:0;display:flex;justify-content:space-between;gap:8px;background:var(--mauve);color:#FFF8EE;border-radius:999px;padding:.5rem clamp(.9rem,38.4px,2rem);font-weight:700;font-size:.74rem;letter-spacing:.22em;text-transform:uppercase}
+.stage{position:relative;flex:1;min-height:0}
+.rail{display:flex;flex-direction:column;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.rail::-webkit-scrollbar{display:none}
+.panel{flex:0 0 100%;width:100%;height:100%;min-height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;position:relative;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+.panel::before{content:"";position:absolute;width:417.6px;aspect-ratio:1;right:-86.4px;bottom:-144px;border:2px dashed var(--line);border-radius:50%;pointer-events:none}
+.panel.alt::before{right:auto;left:-86.4px}
+.pin{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding-block:clamp(.5rem,14.4px,1.5rem);padding-left:var(--gl);padding-right:var(--gr)}
+.in{width:100%;max-width:1280px;margin-inline:auto;display:flex;flex-direction:column;gap:clamp(.6rem,14.4px,1.25rem)}
+.cols{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(1rem,44.8px,3.5rem);align-items:center}
+.cols.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cols.art-first{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+.cols>*{min-width:0}
+.stack{display:flex;flex-direction:column;gap:clamp(.6rem,12.96px,1.1rem)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(.6rem,20.48px,1.2rem)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(.6rem,17.92px,1rem)}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(.6rem,17.92px,1rem)}
+.big-cards .card{padding:1.2rem 1.5rem;gap:.5rem}
+.big-cards .card p{font-size:1.75rem;line-height:1.25}
+.big-cards .card .sub{font-size:1.4rem}
+.big-cards h3{font-size:1.35rem}
+.big-cards .ic{width:3.6rem;height:3.6rem}
+
+h2{font-family:'Anton','Impact','Arial Narrow',sans-serif;font-weight:400;text-transform:uppercase;color:var(--ink);margin:0;line-height:1.02;letter-spacing:.012em;text-wrap:balance}
+.h-xl{font-size:clamp(2.4rem,min(94.72px,108px),6.5rem)}
+.h-md{font-size:clamp(1.8rem,min(56.32px,57.6px),3.2rem)}
+h3{margin:0;font-size:1.25rem;font-weight:700;letter-spacing:.03em;color:var(--accent)}
+p{margin:0}
+.kicker{font-size:.95rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:1.85rem;max-width:none;color:var(--ink);font-weight:500;line-height:1.3}
+.big{font-family:'Anton','Impact',sans-serif;text-transform:uppercase;color:var(--ink);line-height:1.04;letter-spacing:.012em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:clamp(.8rem,14.4px,1.3rem) clamp(.9rem,23.04px,1.4rem);display:flex;flex-direction:column;gap:.4rem}
+.card p{color:var(--ink);font-size:1.5rem;font-weight:600;line-height:1.3}
+.card .sub{font-weight:400;color:var(--text);font-size:.95em}
+.chip{display:inline-block;background:var(--chip);color:var(--ink);padding:.35rem .9rem;border-radius:999px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem}
+.btn{font-weight:700;font-size:1.15rem;border:2px solid var(--ink);color:var(--ink);background:transparent;border-radius:999px;padding:.5rem 1.1rem;cursor:pointer}
+.btn.solid{background:var(--pill);color:var(--pill-fg);border-color:var(--pill)}
+.quote{font-family:'Anton','Impact',sans-serif;text-transform:uppercase;color:var(--ink);font-size:clamp(1.4rem,min(39.68px,43.2px),2.6rem);line-height:1.08}
+.ic{width:2.6rem;height:2.6rem;color:var(--accent);flex:none}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(.6rem,20.48px,1.2rem)}
+.fz .card{align-items:center;text-align:center;padding:1.1rem 1rem 1.3rem;gap:.35rem}
+.fz .card svg.pic{width:min(118px,100%);height:auto;aspect-ratio:1;display:block}
+.fz .card h3{font-family:'Anton','Impact',sans-serif;text-transform:uppercase;font-weight:400;letter-spacing:.012em;color:var(--ink);font-size:1.35rem;line-height:1.1}
+.fz .card p{font-size:1.1rem;font-weight:500;line-height:1.3}
+.cloud{position:relative;align-self:center;max-width:980px;margin-top:.9rem;padding:1.1rem 2.4rem 1.2rem;background:var(--card);border:2px solid var(--line);border-radius:64px;text-align:center;box-shadow:0 6px 0 var(--line)}
+.cloud::before,.cloud::after{content:"";position:absolute;background:var(--card);border:2px solid var(--line);border-radius:50%}
+.cloud::before{width:26px;height:26px;left:14%;bottom:-24px}
+.cloud::after{width:14px;height:14px;left:11%;bottom:-40px}
+.cloud .cl-t{font-family:'Anton','Impact',sans-serif;text-transform:uppercase;color:var(--ink);font-size:clamp(1.6rem,2.5vw,2.4rem);line-height:1.1;letter-spacing:.012em}
+.cloud .cl-s{color:var(--text);font-size:1.3rem;font-weight:500;line-height:1.35;margin-top:.4rem;font-style:italic}
+.art{display:block;width:100%;max-width:min(374.4px,470px);aspect-ratio:1;justify-self:center}
+.art.sm{max-width:min(259.2px,320px)}
+.art.xs{max-width:min(172.8px,210px)}
+.steps{margin:0;padding-left:1.3rem;display:grid;gap:.35rem;color:var(--ink);font-weight:600}
+.num{font-family:'Anton',sans-serif;font-size:1.6rem;color:var(--accent);line-height:1}
+
+/* Ilustraciones */
+.ab{fill:var(--art-bg,#F3E8D2)}
+.float,.sway,.pulse,.breath,.spin,.twinkle,.look,.flicker,.draw{transform-box:fill-box;transform-origin:center}
+.float{animation:float 6s ease-in-out infinite}
+.float.b{animation-duration:7.5s;animation-delay:-2s}
+.sway{animation:sway 5s ease-in-out infinite}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+.breath{animation:breath 6s ease-in-out infinite}
+.breath.b{animation-delay:-1.5s}
+.spin{animation:spin 50s linear infinite}
+.spin.r{animation-direction:reverse;animation-duration:75s}
+.twinkle{animation:twinkle 3s ease-in-out infinite}
+.look{animation:look 7s ease-in-out infinite}
+.flicker{animation:flicker 1.8s ease-in-out infinite}
+.draw{stroke-dasharray:460;animation:draw 3.2s linear infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+@keyframes sway{50%{transform:rotate(7deg)}}
+@keyframes pulse{50%{transform:scale(1.07)}}
+@keyframes breath{50%{transform:scale(1.14)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes twinkle{50%{transform:scale(.5);opacity:.5}}
+@keyframes look{20%{transform:translateX(-14px)}60%{transform:translateX(16px)}}
+@keyframes flicker{50%{transform:scale(1,1.18);opacity:.85}}
+@keyframes draw{from{stroke-dashoffset:460}to{stroke-dashoffset:-460}}
+
+/* Piezas interactivas */
+.sticky{background:#F2D88F;color:#4A3340;padding:clamp(1rem,21.6px,1.8rem) clamp(1.1rem,30.72px,2rem);border-radius:10px;transform:rotate(-1.8deg);box-shadow:0 14px 28px rgba(74,51,64,.18);min-height:clamp(8rem,172.8px,12rem);display:flex;align-items:center}
+.sticky .quote{color:#4A3340}
+.pdots{display:flex;gap:.4rem}
+.pdots i{width:.6rem;height:.6rem;border-radius:50%;background:var(--line)}
+.pdots i.on{background:var(--accent)}
+.ringbox{position:relative;width:min(100%,min(374.4px,460px));aspect-ratio:1;margin-inline:auto}
+.ringbox svg{position:absolute;inset:0;width:100%;height:100%}
+.node{position:absolute;transform:translate(-50%,-50%);width:clamp(2.6rem,115.2px,3.6rem);aspect-ratio:1;border-radius:50%;border:2px solid var(--accent);background:var(--card);color:var(--accent);font-family:'Anton',sans-serif;font-size:1.35rem;cursor:pointer;padding:0}
+.node[aria-pressed="true"]{background:var(--pill);color:var(--pill-fg);border-color:var(--pill)}
+.ringcenter{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none;font-family:'Anton',sans-serif;text-transform:uppercase;color:var(--ink);font-size:clamp(1.1rem,21.6px,1.7rem);line-height:1.1}
+.bigline{font-size:clamp(2rem,min(81.92px,86.4px),4.6rem)}
+.struck{text-decoration:line-through;text-decoration-thickness:.07em;opacity:.5}
+.hoyline{color:var(--accent)}
+.mito-item{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:.7rem 1rem;color:var(--ink);display:flex;flex-direction:column;gap:.35rem;align-items:flex-start}
+.mito-item .q{font-weight:700;font-size:1.45rem;line-height:1.25}
+.mito-item .a{color:var(--text);font-size:1.2rem}
+.tabs{display:flex;flex-wrap:wrap;gap:.45rem}
+.tab{font-weight:700;font-size:1.1rem;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:.4rem .95rem;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--pill);color:var(--pill-fg);border-color:var(--pill)}
+.tabpanel{min-height:clamp(6rem,115.2px,9rem);justify-content:center}
+.jh{display:grid;grid-template-columns:1fr;gap:.7rem}
+.jh .row2{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:.7rem 1.1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:center;animation:jhin .7s both}
+.jh .j{font-size:1.4rem;font-weight:600;text-decoration:line-through;text-decoration-thickness:.08em;opacity:.55;color:var(--ink)}
+.jh .h{font-size:1.45rem;font-weight:700;color:var(--ink);padding-left:1rem;border-left:3px solid var(--accent)}
+.jh small{display:block;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--accent);text-decoration:none}
+@keyframes jhin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.steps3{display:grid;gap:.8rem}
+.steps3 .st{display:flex;gap:1rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:.8rem 1.1rem}
+.steps3 .st .num{font-size:2.2rem}
+.steps3 .st p{font-size:1.5rem;font-weight:600;color:var(--ink);line-height:1.2}
+.steps3 .st .x{text-decoration:line-through;opacity:.6}
+.flip{display:block;width:100%;text-align:left;font-size:1.45rem;font-weight:600;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:.75rem 1rem;cursor:pointer}
+.flip small{display:block;font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:.85rem;color:var(--accent)}
+.flip.on{background:var(--pill);color:var(--pill-fg)}
+.flip.on small{color:var(--pill-fg)}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;background:transparent;color:var(--ink);font-weight:700;padding:.5rem 1.15rem;cursor:pointer;font-size:1.15rem}
+.seg button[aria-pressed="true"]{background:var(--pill);color:var(--pill-fg)}
+.hoy{font-size:clamp(4rem,min(217.6px,216px),11rem);color:var(--accent);line-height:.92}
+.thanks{font-size:clamp(3rem,min(166.4px,172.8px),9rem);color:var(--accent);line-height:.95}
+.names{position:relative;z-index:1;flex:none;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.2rem 1.5rem;background:var(--mauve);color:#FFF8EE;padding-block:.75rem;padding-left:var(--gl);padding-right:var(--gr);font-weight:600}
+.brandword{font-family:'Anton','Impact',sans-serif;color:var(--accent);font-size:clamp(1.7rem,33.12px,2.9rem);letter-spacing:.16em;line-height:1}
+.cover-title{font-size:clamp(2.6rem,min(104.96px,104.4px),9rem)}
+
+/* Pie */
+.foot{flex:none;display:flex;align-items:center;gap:10px;padding-top:8px;padding-bottom:8px;padding-left:var(--gl);padding-right:var(--gr)}
+.nbtn{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--mauve);color:#FFF8EE;font-size:1.3rem;cursor:pointer}
+.nbtn:disabled{opacity:.35;cursor:default}
+.acts{flex:1;min-width:0;display:flex;justify-content:center;gap:.4rem;flex-wrap:wrap}
+.act{border:0;background:transparent;color:#D9CCD2;font-weight:700;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;padding:.45rem .8rem;border-radius:999px;cursor:pointer}
+.act[aria-current="true"]{background:var(--gold);color:#3F2E3A}
+.count{flex:none;font-variant-numeric:tabular-nums;font-size:.85rem;color:#D9CCD2;min-width:3.6rem;text-align:right}
+.noteb{flex:none;font-weight:700;font-size:.82rem;border:2px solid #9A86A4;color:var(--cream);background:transparent;border-radius:999px;padding:.35rem .85rem;cursor:pointer}
+.noteb[aria-pressed="true"]{background:var(--gold);color:#3F2E3A;border-color:var(--gold)}
+.prog{position:absolute;left:0;bottom:0;height:4px;background:var(--gold);width:0;transition:width .35s ease;z-index:6}
+.notes{position:absolute;left:0;right:0;bottom:0;max-height:55%;overflow:auto;z-index:5;background:#FBF5EB;color:#3F2E3A;border-top:5px solid var(--gold);padding-block:1rem;padding-left:var(--gl);padding-right:var(--gr)}
+.notes h3{color:#6E5478;margin-bottom:.4rem}
+.notes ul{margin:0;padding-left:1.2rem;display:grid;gap:.35rem}
+@media (prefers-reduced-motion:reduce){.float,.sway,.pulse,.breath,.spin,.twinkle,.look,.flicker,.draw{animation:none}.prog{transition:none}}
+
+/* ===== Formato vertical 9:16 (720x1280), se avanza hacia abajo ===== */
+html{font-size:20px}
+:root{--gl:38px;--gr:38px}
+.canvas{width:720px;height:1280px}
+.bar{font-size:.62rem;letter-spacing:.16em;padding:.5rem 1rem}
+.cols,.cols.even,.cols.art-first{grid-template-columns:minmax(0,1fr);gap:1.6rem;align-content:center}
+.art{max-width:330px}.art.sm{max-width:270px}.art.xs{max-width:190px}
+.h-xl{font-size:4.1rem}.h-md{font-size:3rem}
+.cover-title{font-size:4.6rem}
+.lead{font-size:1.7rem}
+.grid3{grid-template-columns:minmax(0,1fr)}
+.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.big-cards .card p{font-size:1.65rem}
+.big-cards .card{padding:1.1rem 1.4rem}
+.fz .h-xl{font-size:2.9rem!important}
+.fz .card svg.pic{width:min(120px,100%)}
+.fz .card h3{font-size:1.3rem}
+.fz .card p{font-size:1.05rem}
+.cloud{padding:1.1rem 1.6rem 1.3rem;border-radius:48px}
+.cloud .cl-t{font-size:1.9rem!important}
+.cloud .cl-s{font-size:1.2rem}
+.hoy{font-size:8.4rem}
+.quote{font-size:2.2rem}
+.ringbox{width:min(100%,400px)}
+.foot{flex-wrap:wrap;row-gap:4px}
+.acts{order:3;flex:1 0 100%}
+.act{font-size:.7rem;padding:.35rem .6rem}
+.count{margin-left:auto}
+.notes{max-height:60%}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<!-- Plato con onda de voz -->
+<symbol id="plate" viewBox="0 0 600 600">
+<g class="spin" fill="none" stroke="#D8C196" stroke-width="3" stroke-dasharray="14 18" stroke-linecap="round"><circle cx="300" cy="300" r="291"/></g>
+<g class="spin r" fill="none" stroke="#B7A5C0" stroke-width="3" stroke-dasharray="4 14" stroke-linecap="round"><circle cx="300" cy="300" r="262"/></g>
+<circle cx="300" cy="300" r="226" fill="#F7EFE4"/>
+<circle cx="300" cy="300" r="226" fill="none" stroke="#C9AE7C" stroke-width="8"/>
+<circle cx="300" cy="300" r="180" fill="#EBDDC6"/>
+<rect x="190.5" y="270" width="9" height="60" rx="4.5" fill="#C9AE7C"/>
+<rect x="205.5" y="244" width="9" height="112" rx="4.5" fill="#B7A5C0"/>
+<rect x="220.5" y="225" width="9" height="150" rx="4.5" fill="#7D6989"/>
+<rect x="235.5" y="250" width="9" height="100" rx="4.5" fill="#D69A80"/>
+<rect x="250.5" y="205" width="9" height="190" rx="4.5" fill="#7D6989"/>
+<rect x="265.5" y="232" width="9" height="136" rx="4.5" fill="#B7A5C0"/>
+<rect x="280.5" y="188" width="9" height="224" rx="4.5" fill="#7D6989"/>
+<rect x="295.5" y="215" width="9" height="170" rx="4.5" fill="#C9AE7C"/>
+<rect x="310.5" y="195" width="9" height="210" rx="4.5" fill="#7D6989"/>
+<rect x="325.5" y="238" width="9" height="124" rx="4.5" fill="#B7A5C0"/>
+<rect x="340.5" y="218" width="9" height="164" rx="4.5" fill="#D69A80"/>
+<rect x="355.5" y="255" width="9" height="90" rx="4.5" fill="#C9AE7C"/>
+<rect x="370.5" y="240" width="9" height="120" rx="4.5" fill="#B7A5C0"/>
+<rect x="385.5" y="270" width="9" height="60" rx="4.5" fill="#7D6989"/>
+<rect x="400.5" y="283" width="9" height="34" rx="4.5" fill="#C9AE7C"/>
+</symbol>
+
+<!-- Calendario -->
+<symbol id="art-calendar" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="float">
+<rect x="105" y="92" width="190" height="216" rx="20" fill="#FDF8F0"/>
+<path d="M105 112a20 20 0 0 1 20-20h150a20 20 0 0 1 20 20v34H105z" fill="#D69A80"/>
+<rect x="145" y="76" width="12" height="36" rx="6" fill="#4E3C47"/>
+<rect x="243" y="76" width="12" height="36" rx="6" fill="#4E3C47"/>
+<g stroke="#D9C9B0" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 30" fill="none">
+<path d="M140 182H260"/><path d="M140 214H260"/><path d="M140 246H260"/><path d="M140 278H260"/>
+</g>
+<circle cx="260" cy="278" r="19" fill="none" stroke="#C9AE7C" stroke-width="5"/>
+</g>
+<g transform="rotate(8 320 150)"><g class="sway"><rect x="285" y="118" width="74" height="74" rx="6" fill="#F2D88F"/><path d="M298 142h48M298 158h36M298 174h42" stroke="#B8975A" stroke-width="5" stroke-linecap="round"/></g></g>
+</symbol>
+
+<!-- Espejo -->
+<symbol id="art-mirror" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<rect x="192" y="290" width="16" height="84" rx="8" fill="#C9AE7C"/>
+<ellipse cx="200" cy="178" rx="98" ry="118" fill="#FDF8F0" stroke="#C9AE7C" stroke-width="14"/>
+<ellipse cx="200" cy="178" rx="78" ry="98" fill="#EBDDC6"/>
+<path d="M200 232C162 205 154 170 176 158C190 151 200 160 200 169C200 160 210 151 224 158C246 170 238 205 200 232Z" fill="#D69A80"/>
+<g class="twinkle"><path d="M262 108l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#FDF8F0"/></g>
+<g class="twinkle" style="animation-delay:-1.5s"><path d="M148 214l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#FDF8F0"/></g>
+</symbol>
+
+<!-- Hoja y lápiz -->
+<symbol id="art-paper" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g transform="rotate(-5 200 200)"><rect x="110" y="80" width="180" height="240" rx="14" fill="#FDF8F0"/>
+<path d="M135 130h130M135 170h130M135 210h130M135 250h90" stroke="#D9C9B0" stroke-width="6" stroke-linecap="round"/>
+<path d="M135 130h52M200 130h30" stroke="#7A6086" stroke-width="6" stroke-linecap="round"/></g>
+<g transform="rotate(38 300 280)"><g class="sway"><rect x="290" y="190" width="22" height="130" rx="4" fill="#E8C98F"/><path d="M290 320h22l-11 34z" fill="#EBDDC6"/><path d="M299 346h4l-2 8z" fill="#4E3C47"/><rect x="290" y="190" width="22" height="22" rx="4" fill="#D69A80"/></g></g>
+</symbol>
+
+<!-- Círculo del patrón -->
+<symbol id="art-loop" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="spin">
+<circle cx="200" cy="200" r="105" fill="none" stroke="#7D6989" stroke-width="8" stroke-dasharray="3 18" stroke-linecap="round"/>
+<circle cx="200" cy="95" r="24" fill="#D69A80"/><circle cx="300" cy="168" r="24" fill="#C9AE7C"/><circle cx="262" cy="285" r="24" fill="#9A86A4"/><circle cx="138" cy="285" r="24" fill="#EBC7B8"/><circle cx="100" cy="168" r="24" fill="#7D6989"/>
+</g>
+<circle cx="200" cy="200" r="52" fill="#FDF8F0" stroke="#C9AE7C" stroke-width="6"/>
+<path d="M178 200a22 22 0 0 1 38-15M222 200a22 22 0 0 1-38 15" fill="none" stroke="#7D6989" stroke-width="7" stroke-linecap="round"/>
+<path d="M208 176l10 8-13 4zM192 224l-10-8 13-4z" fill="#7D6989"/>
+</symbol>
+
+<!-- Plato con candado -->
+<symbol id="art-lock" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<circle cx="200" cy="215" r="115" fill="#FDF8F0" stroke="#C9AE7C" stroke-width="10"/>
+<circle cx="200" cy="215" r="78" fill="#EBDDC6"/>
+<g class="float"><path d="M168 198v-24a32 32 0 0 1 64 0v24" fill="none" stroke="#7D6989" stroke-width="13" stroke-linecap="round"/>
+<rect x="150" y="196" width="100" height="82" rx="16" fill="#D69A80"/>
+<circle cx="200" cy="230" r="10" fill="#4E3C47"/><rect x="196" y="234" width="8" height="22" rx="4" fill="#4E3C47"/></g>
+</symbol>
+
+<!-- Pausa -->
+<symbol id="art-pause" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="breath"><circle cx="200" cy="200" r="148" fill="none" stroke="#C9AE7C" stroke-width="6" stroke-dasharray="2 15" stroke-linecap="round"/></g>
+<circle cx="200" cy="200" r="108" fill="#7D6989"/>
+<rect x="165" y="152" width="28" height="96" rx="9" fill="#F7EFE4"/><rect x="207" y="152" width="28" height="96" rx="9" fill="#F7EFE4"/>
+<g class="float"><circle cx="90" cy="110" r="14" fill="#D69A80"/></g><g class="float b"><circle cx="318" cy="288" r="18" fill="#C9AE7C"/></g><g class="float b"><circle cx="305" cy="104" r="9" fill="#EBC7B8"/></g>
+</symbol>
+
+<!-- Sol de "hoy" -->
+<symbol id="art-sun" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="spin"><g stroke="#E3B96A" stroke-width="12" stroke-linecap="round">
+<path d="M200 96v-34M200 304v34M96 200H62M304 200h34M126 126l-24-24M274 274l24 24M274 126l24-24M126 274l-24 24"/></g></g>
+<circle cx="200" cy="200" r="86" fill="#F0C77A"/>
+<circle cx="200" cy="200" r="60" fill="#F7DDA0"/>
+<path d="M0 0" fill="none"/>
+</symbol>
+
+<!-- Ojo -->
+<symbol id="art-eye" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<path d="M62 205Q200 92 338 205Q200 318 62 205Z" fill="#FDF8F0" stroke="#4E3C47" stroke-width="8" stroke-linejoin="round"/>
+<g class="look"><circle cx="200" cy="205" r="58" fill="#9A86A4"/><circle cx="200" cy="205" r="30" fill="#4E3C47"/><circle cx="218" cy="187" r="11" fill="#FDF8F0"/></g>
+<path d="M108 160l-14-26M200 134v-34M292 160l14-26" stroke="#4E3C47" stroke-width="8" stroke-linecap="round"/>
+</symbol>
+
+<!-- Nutrientes -->
+<symbol id="art-nutri" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<circle cx="200" cy="200" r="122" fill="#FDF8F0" stroke="#C9AE7C" stroke-width="10"/>
+<g class="spin">
+<path d="M200 200V108A92 92 0 0 1 292 200Z" fill="#D69A80"/>
+<path d="M200 200H292A92 92 0 0 1 200 292Z" fill="#C9AE7C"/>
+<path d="M200 200V292A92 92 0 0 1 108 200Z" fill="#9A86A4"/>
+<path d="M200 200H108A92 92 0 0 1 200 108Z" fill="#EBC7B8"/>
+<path d="M200 108V292M108 200H292" stroke="#FDF8F0" stroke-width="6"/>
+</g>
+<circle cx="200" cy="200" r="16" fill="#FDF8F0"/>
+</symbol>
+
+<!-- Mito o verdad -->
+<symbol id="art-bubbles" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="float"><rect x="68" y="98" width="170" height="116" rx="32" fill="#E8C98F"/><path d="M110 208l-8 44 44-30z" fill="#E8C98F"/><path d="M110 156l32 32 56-62" fill="none" stroke="#4E3C47" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g class="float b"><rect x="168" y="210" width="170" height="116" rx="32" fill="#9A86A4"/><path d="M296 320l8 44-44-30z" fill="#9A86A4"/><path d="M226 246l56 56M282 246l-56 56" stroke="#FDF8F0" stroke-width="15" stroke-linecap="round"/></g>
+</symbol>
+
+<!-- Plato con corazón -->
+<symbol id="art-plate2" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<circle cx="200" cy="200" r="104" fill="#FDF8F0" stroke="#C9AE7C" stroke-width="10"/>
+<circle cx="200" cy="200" r="72" fill="#EBDDC6"/>
+<g class="pulse"><path d="M200 242C168 218 160 190 178 180C190 174 200 181 200 189C200 181 210 174 222 180C240 190 232 218 200 242Z" fill="#D69A80"/></g>
+<g fill="#A98C57"><rect x="62" y="104" width="8" height="64" rx="4"/><rect x="80" y="104" width="8" height="64" rx="4"/><rect x="98" y="104" width="8" height="64" rx="4"/><rect x="62" y="150" width="44" height="22" rx="11"/><rect x="76" y="166" width="14" height="130" rx="7"/></g>
+<g fill="#A98C57"><path d="M312 104C342 128 342 190 312 212Z"/><rect x="305" y="206" width="14" height="90" rx="7"/></g>
+</symbol>
+
+<!-- Mesa -->
+<symbol id="art-table" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<circle cx="200" cy="200" r="128" fill="#E3C4A8"/>
+<g fill="#FDF8F0" stroke="#C9AE7C" stroke-width="5"><circle cx="200" cy="118" r="30"/><circle cx="282" cy="200" r="30"/><circle cx="200" cy="282" r="30"/><circle cx="118" cy="200" r="30"/></g>
+<g fill="#9A86A4"><circle cx="246" cy="146" r="13"/><circle cx="254" cy="246" r="13"/><circle cx="154" cy="254" r="13"/><circle cx="146" cy="154" r="13"/></g>
+<g fill="#FDF8F0" opacity=".7"><circle cx="242" cy="142" r="4"/><circle cx="250" cy="242" r="4"/><circle cx="150" cy="250" r="4"/><circle cx="142" cy="150" r="4"/></g>
+<g class="breath"><circle cx="200" cy="200" r="44" fill="#F1C36B" opacity=".28"/></g>
+<circle cx="200" cy="204" r="16" fill="#FDF8F0"/>
+<g class="flicker"><ellipse cx="200" cy="184" rx="7" ry="13" fill="#F1C36B"/></g>
+</symbol>
+
+<!-- Respirar -->
+<symbol id="art-breath" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="breath"><circle cx="200" cy="200" r="150" fill="#9A86A4" opacity=".28"/></g>
+<g class="breath b"><circle cx="200" cy="200" r="106" fill="#9A86A4" opacity=".5"/></g>
+<circle cx="200" cy="200" r="64" fill="#7D6989"/>
+<path d="M200 234C170 216 170 176 200 160C230 176 230 216 200 234Z" fill="#FDF8F0"/><path d="M200 232V176" stroke="#7D6989" stroke-width="4" stroke-linecap="round"/>
+</symbol>
+
+<!-- Globo de voz -->
+<symbol id="art-speech" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="float"><rect x="76" y="98" width="214" height="150" rx="44" fill="#FDF8F0"/><path d="M118 240l-22 56 74-48z" fill="#FDF8F0"/>
+<path d="M183 205C148 180 141 150 160 139C173 132 183 141 183 149C183 141 193 132 206 139C225 150 218 180 183 205Z" transform="translate(12 -2)" fill="#D69A80"/></g>
+<g class="float b"><circle cx="304" cy="262" r="44" fill="#C9AE7C"/><circle cx="286" cy="262" r="6" fill="#FDF8F0"/><circle cx="304" cy="262" r="6" fill="#FDF8F0"/><circle cx="322" cy="262" r="6" fill="#FDF8F0"/></g>
+</symbol>
+
+<!-- Corazón con pulso -->
+<symbol id="art-heart" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="pulse"><path d="M200 312C90 238 80 152 135 130C170 116 200 142 200 162C200 142 230 116 265 130C320 152 310 238 200 312Z" fill="#D69A80"/></g>
+<path class="draw" d="M56 212H140L165 160L195 256L222 186L245 212H344" fill="none" stroke="#FDF8F0" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+
+<!-- Rayo -->
+<symbol id="art-bolt" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="spin"><circle cx="200" cy="200" r="150" fill="none" stroke="#9A86A4" stroke-width="6" stroke-dasharray="2 16" stroke-linecap="round"/></g>
+<g class="pulse"><path d="M232 68L140 214h56l-28 118 100-160h-58z" fill="#E3B96A" stroke="#A98C57" stroke-width="6" stroke-linejoin="round"/></g>
+</symbol>
+
+<!-- Cámara -->
+<symbol id="art-camera" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<rect x="148" y="108" width="76" height="44" rx="12" fill="#FDF8F0" stroke="#4E3C47" stroke-width="8"/>
+<rect x="76" y="136" width="248" height="168" rx="30" fill="#FDF8F0" stroke="#4E3C47" stroke-width="8"/>
+<circle cx="200" cy="222" r="58" fill="#7D6989"/><circle cx="200" cy="222" r="34" fill="#4E3C47"/><circle cx="214" cy="208" r="10" fill="#FDF8F0"/>
+<g class="flicker"><circle cx="288" cy="166" r="9" fill="#D69A80"/></g>
+</symbol>
+
+<!-- Comunidad -->
+<symbol id="art-community" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<use href="#plate" x="116" y="116" width="168" height="168"/>
+<g stroke="#4E3C47" stroke-width="4">
+<circle cx="200" cy="52" r="26" fill="#C9AE7C"/><circle cx="304" cy="96" r="26" fill="#B7A5C0"/><circle cx="348" cy="200" r="26" fill="#7D6989"/><circle cx="304" cy="304" r="26" fill="#D69A80"/>
+<circle cx="200" cy="348" r="26" fill="#C9AE7C"/><circle cx="96" cy="304" r="26" fill="#B7A5C0"/><circle cx="52" cy="200" r="26" fill="#7D6989"/><circle cx="96" cy="96" r="26" fill="#D69A80"/>
+</g>
+</symbol>
+
+<!-- Preguntas -->
+<symbol id="art-questions" viewBox="0 0 400 400">
+<circle class="ab" cx="200" cy="200" r="190"/>
+<g class="float"><rect x="70" y="92" width="150" height="116" rx="34" fill="#E8C98F"/><path d="M106 200l-10 40 42-28z" fill="#E8C98F"/><text x="145" y="176" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="80" fill="#4E3C47">?</text></g>
+<g class="float b"><rect x="180" y="204" width="150" height="116" rx="34" fill="#9A86A4"/><path d="M294 312l10 40-42-28z" fill="#9A86A4"/><text x="255" y="288" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="80" fill="#FDF8F0">?</text></g>
+</symbol>
+
+<!-- Iconos chicos -->
+<symbol id="ic-battery" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="20" width="44" height="26" rx="7"/><path d="M54 29v8" stroke-linecap="round"/></g><rect x="12" y="26" width="22" height="14" rx="3" fill="currentColor"/></symbol>
+<symbol id="ic-clock" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="22"/><path d="M32 19v13l9 6"/></g></symbol>
+<symbol id="ic-heart" viewBox="0 0 64 64"><path d="M32 52C12 38 10 22 20 17C26 14 32 18 32 23C32 18 38 14 44 17C54 22 52 38 32 52Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></symbol>
+<symbol id="ic-calendar" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="13" width="46" height="42" rx="7"/><path d="M9 26h46M22 8v10M42 8v10M23 40l7 7 12-13"/></g></symbol>
+<symbol id="ic-lock" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="29" width="36" height="26" rx="7"/><path d="M21 29v-8a11 11 0 0 1 22 0v8"/></g></symbol>
+<symbol id="ic-plate" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="4"><circle cx="32" cy="32" r="23"/><circle cx="32" cy="32" r="12"/></g></symbol>
+<symbol id="ic-people" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><circle cx="24" cy="22" r="8"/><circle cx="44" cy="26" r="6.5"/><path d="M9 52a15 15 0 0 1 30 0M38 52a12 12 0 0 1 20 0"/></g></symbol>
+</defs>
+</svg>
+
+<div class="vp" id="vp"><div class="canvas" id="canvas">
+<div class="app">
+<header class="top">
+  <img class="logo" src="data:image/png;base64,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" alt="Logo de DVOLVE">
+  <div class="bar"><span>Cuerpo</span><span>Mente</span><span>Evolución</span></div>
+</header>
+
+<div class="stage">
+<main class="rail" id="rail">
+
+<!-- 1 Portada -->
+<section class="panel t-cocoa" id="cover" data-act="inicio" data-title="Portada">
+  <div class="pin"><div class="in">
+    <div class="cols">
+      <div class="stack">
+        <p class="brandword">DVOLVE</p>
+        <h2 class="cover-title">La voz de tu plato</h2>
+        <p class="lead">Una charla para dejar de pelearnos con la comida.</p>
+        <div class="row"><button class="btn solid" type="button" data-next>Empezar →</button></div>
+      </div>
+      <svg class="art" role="img" aria-label="Un plato visto desde arriba con una onda de voz en el centro"><use href="#plate"/></svg>
+    </div>
+  </div></div>
+  <div class="names"><span>Lourdes De Virgiliis</span><span>Lic. Trinidad Aruanno</span></div>
+</section>
+
+<!-- 2 Lema -->
+<section class="panel t-gold alt" id="lema" data-act="inicio" data-title="El lema">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack">
+      <p class="kicker">El lema</p>
+      <p class="big" style="font-size:clamp(2.2rem,min(66.56px,75.6px),5.2rem)">Que nutrirte no sea el precio que pagás para poder disfrutar.</p>
+    </div>
+    <svg class="art sm" role="img" aria-label="Plato con onda de voz"><use href="#plate"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 3 Para vos si -->
+<section class="panel t-cream" id="vosi" data-act="inicio" data-title="Para quién es esta charla">
+  <div class="pin"><div class="in"><div class="cols art-first">
+    <svg class="art sm" role="img" aria-label="Un espejo de mano con un corazón"><use href="#art-mirror"/></svg>
+    <div class="stack">
+      <p class="kicker">Esta charla es para vos si…</p>
+      <div class="grid2">
+        <div class="card"><p>Vivís peleada con tu físico</p></div>
+        <div class="card"><p>Te castigás con la comida</p></div>
+        <div class="card"><p>Dejás de vivir por la mirada ajena</p></div>
+        <div class="card"><p>Esperás “llegar” para empezar a vivir</p></div>
+      </div>
+    </div>
+  </div></div></div>
+</section>
+
+<!-- 4 Título: espera -->
+<section class="panel t-blush alt" id="t-espera" data-act="reconocer" data-title="Esperando el cuerpo ideal">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Reconocer</p><h2 class="h-xl">Esperando el cuerpo ideal</h2><p class="lead" style="white-space:nowrap;font-size:1.7rem">¿Qué estoy esperando para empezar a vivir?</p></div>
+    <svg class="art" role="img" aria-label="Un calendario con una fecha lejana marcada"><use href="#art-calendar"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 5 espera: frases -->
+<section class="panel t-cream" id="espera" data-act="reconocer" data-title="Las frases del cuando">
+  <div class="pin"><div class="in"><div class="cols even">
+    <div class="stack">
+      <p class="kicker">La escena que muchas conocen</p>
+      <div class="sticky"><p class="quote" id="phrase" aria-live="polite"></p></div>
+      <div class="row"><button class="btn solid" type="button" id="phraseBtn">Otra frase ↻</button><span class="pdots" id="pdots" aria-hidden="true"></span></div>
+    </div>
+    <svg class="art sm" role="img" aria-label="Calendario"><use href="#art-calendar"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 6 pensar -->
+<section class="panel t-sand alt" id="pensar" data-act="reconocer" data-title="Para pensar en silencio">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack">
+      <p class="kicker">Para pensar en silencio</p>
+      <div class="card"><p>¿Qué imaginás que va a pasar el día que llegues?</p></div>
+      <div class="card"><p>¿Qué te estás prometiendo para ese día?</p></div>
+      <div class="card"><p>¿Hace cuánto estás esperando?</p></div>
+    </div>
+    <div class="stack" style="align-items:center">
+      <svg class="art sm" role="img" aria-label="Una hoja con una frase para completar y un lápiz"><use href="#art-paper"/></svg>
+      <p class="quote" style="text-align:center">Cuando ____, voy a ____</p>
+      <p class="kicker">En una hoja, sin compartir</p>
+    </div>
+  </div></div></div>
+</section>
+
+<!-- 7 Título: pelea -->
+<section class="panel t-cocoa" id="t-pelea" data-act="reconocer" data-title="La pelea con la comida">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Reconocer</p><h2 class="h-xl">La pelea con la comida es un patrón</h2><p class="lead">¿Por qué me peleo con lo que como?</p></div>
+    <svg class="art" role="img" aria-label="Un círculo de cinco pasos que se repite"><use href="#art-loop"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 8 Pelea: círculo -->
+<section class="panel t-sand alt" id="pelea" data-act="reconocer" data-title="El círculo en cinco pasos">
+  <div class="pin"><div class="in"><div class="cols even">
+    <div class="ringbox" id="ringbox">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="38" fill="none" style="stroke:var(--accent)" stroke-width="1.4" stroke-dasharray="1.6 3" stroke-linecap="round"/></svg>
+      <div class="ringcenter" aria-hidden="true"><span>El<br>círculo</span></div>
+    </div>
+    <div class="stack">
+      <p class="kicker">Tocá cada paso</p>
+      <div class="card"><span class="num" id="stepNum"></span><h3 id="stepTitle" style="font-size:2.2rem;font-family:'Anton',sans-serif;text-transform:uppercase;font-weight:400;color:var(--ink)"></h3><p id="stepText" aria-live="polite" style="font-size:1.95rem;line-height:1.25;min-height:2.5em"></p><p id="stepFoot" style="font-size:1.45rem;font-weight:700;color:var(--accent);white-space:nowrap;min-height:1.6em;margin-top:.4rem"></p></div>
+      <div class="row"><button class="btn solid" type="button" id="stepNext">Siguiente paso →</button></div>
+    </div>
+  </div></div></div>
+</section>
+
+<!-- 9 Descontrol -->
+<section class="panel t-blush" id="descontrol" data-act="reconocer" data-title="No nace del carácter">
+  <div class="pin"><div class="in"><div class="cols art-first">
+    <svg class="art sm" role="img" aria-label="Un plato con un candado"><use href="#art-lock"/></svg>
+    <div class="stack">
+      <p class="quote" style="font-size:clamp(1.6rem,min(46.08px,50.4px),3rem)">El descontrol no nace del carácter. Nace de la restricción previa.</p>
+      <div class="grid2">
+        <div class="card"><p>Prohibir hace desear</p></div>
+        <div class="card"><p>La culpa sostiene el círculo</p></div>
+        <div class="card"><p>“Me lo gané” vuelve a la comida un premio</p></div>
+        <div class="card"><p>“No me lo merezco” la vuelve un castigo</p></div>
+      </div>
+    </div>
+  </div></div></div>
+</section>
+
+<!-- 10 Título: pausa -->
+<section class="panel t-mauve alt" id="t-pausa" data-act="reconocer" data-title="La vida en pausa">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Reconocer</p><h2 class="h-xl">La vida en pausa</h2><p class="lead">¿Qué dejé de vivir por esperar?</p></div>
+    <svg class="art" role="img" aria-label="Un botón de pausa rodeado de círculos flotando"><use href="#art-pause"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 11 Hoy -->
+<section class="panel t-cream" id="hoy" data-act="reconocer" data-title="Del cuando al hoy">
+  <div class="pin"><div class="in"><div class="cols even">
+    <div class="stack">
+      <p class="big bigline" id="cuandoLine">Cuando baje de peso…</p>
+      <p class="big bigline hoyline" id="hoyLine" hidden>Hoy…</p>
+      <div class="row"><button class="btn solid" type="button" id="hoyBtn" aria-pressed="false">Tachar el “cuando”</button></div>
+      <p class="lead" id="turn" hidden>Tachá tu “cuando”, escribí “hoy” y pensá la versión más chica para esta semana.</p>
+    </div>
+    <svg class="art sm" role="img" aria-label="Un sol saliendo en el horizonte"><use href="#art-sun"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 12 Mirada -->
+<section class="panel t-sand alt" id="mirada" data-act="reconocer" data-title="Lo que se posterga">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack">
+      <p class="kicker">Lo que se posterga</p>
+      <div class="chips"><span class="chip">La playa</span><span class="chip">Las fotos</span><span class="chip">Ropa que te guste</span><span class="chip">Bailar</span><span class="chip">Una cita</span><span class="chip">Comer en público</span></div>
+      <div class="card" style="margin-top:.4rem"><h3>Y detrás, la mirada de los demás</h3><p>Revisar quién mira. Elegir ropa para tapar. Compararse.</p></div>
+    </div>
+    <svg class="art sm" role="img" aria-label="Un ojo grande que mira hacia los costados"><use href="#art-eye"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 13 Título: cuerpo -->
+<section class="panel t-gold" id="t-cuerpo" data-act="entender" data-title="Qué necesita tu cuerpo de verdad">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Entender</p><h2 class="h-xl">Qué necesita tu cuerpo de verdad</h2><p class="lead">Tu cuerpo entiende de nutrientes.</p></div>
+    <svg class="art" role="img" aria-label="Un plato dividido en porciones de colores"><use href="#art-nutri"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 14 Necesita -->
+<section class="panel t-cream alt" id="necesita" data-act="entender" data-title="Tres ideas sobre el cuerpo">
+  <div class="pin"><div class="in">
+    <div class="grid3 big-cards">
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-battery"/></svg><h3>Comer es una necesidad</h3><p class="sub">Energía para pensar, moverse y dormir.</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-clock"/></svg><h3>Restringir tiene costo</h3><p class="sub">Hambre y cansancio. No es debilidad, es biología.</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-lock"/></svg><h3>Prohibir hace desear</h3><p class="sub">Lo prohibido ocupa más lugar en tu cabeza.</p></div>
+    </div>
+    <p class="quote" style="text-align:center">Tu cuerpo no negocia. Te pide lo que necesita, y no tenés que ganártelo.</p>
+  </div></div>
+</section>
+
+<!-- 15 Mito o verdad -->
+<section class="panel t-blush" id="mito" data-act="entender" data-title="Mito o verdad">
+  <div class="pin"><div class="in"><div class="cols art-first">
+    <svg class="art sm" role="img" aria-label="Dos globos de diálogo, uno con tilde y otro con cruz"><use href="#art-bubbles"/></svg>
+    <div class="stack">
+      <p class="kicker">Mito o verdad · mano derecha verdad, izquierda mito</p>
+      <div class="grid2" id="mitoBox"></div>
+    </div>
+  </div></div></div>
+</section>
+
+<!-- 16 Título: plato -->
+<section class="panel t-cocoa alt" id="t-plato" data-act="entender" data-title="Comer sin castigo">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Entender</p><h2 class="h-xl">Comer sin castigo</h2><p class="lead">¿Cómo corto el círculo?</p></div>
+    <svg class="art" role="img" aria-label="Un plato con un corazón, un tenedor y un cuchillo"><use href="#art-plate2"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 17 Sin castigo -->
+<section class="panel t-sand" id="sincastigo" data-act="entender" data-title="Tres herramientas para llevarse">
+  <div class="pin"><div class="in">
+    <p class="kicker">Tres herramientas para llevarse</p>
+    <div class="grid3 big-cards">
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-clock"/></svg><h3>No restringir</h3><p class="sub">Baja la ansiedad y los atracones.</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-heart"/></svg><h3>Planificar la flexibilidad</h3><p class="sub">Con lugar para el placer, sin culpa.</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-calendar"/></svg><h3>Bajar la exigencia hacia una misma</h3><p class="sub">La próxima comida es normal.</p></div>
+    </div>
+    <p class="lead">Pedir ayuda a un profesional de salud con trabajo interdisciplinario</p>
+  </div></div>
+</section>
+
+<!-- 19 Título: eventos -->
+<section class="panel t-blush" id="t-eventos" data-act="entender" data-title="Comer en eventos y salidas">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Entender</p><h2 class="h-xl">Comer en eventos y salidas</h2><p class="lead">Cuando sentimos que arruinamos lo que estábamos construyendo.</p><p class="lead" style="font-weight:700;color:var(--accent)">No se trata de evitar las juntadas, sino de aprender a incluirlas.</p></div>
+    <svg class="art" role="img" aria-label="Una mesa vista desde arriba con platos, copas y una vela"><use href="#art-table"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 20 Eventos -->
+<section class="panel t-cream alt" id="eventos" data-act="entender" data-title="Antes, en el plato y en la mesa">
+  <div class="pin"><div class="in">
+    <div class="grid3 big-cards">
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-clock"/></svg><h3>Antes de llegar</h3><p>Comidas previas completas</p><p>Tomar agua</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-plate"/></svg><h3>En el plato</h3><p>Elegir lo que realmente querés</p><p>Servirte en un plato</p><p>En caso de que ocurra frecuentemente, elegí una buena fuente de proteína para estar más saciada</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-people"/></svg><h3>En la mesa</h3><p>Sentada y con calma</p><p>Despacio y presente</p><p>Mirar a las personas de frente</p></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 21 Título: voz -->
+<section class="panel t-mauve" id="t-voz" data-act="practicar" data-title="Herramientas para dejar de pelearte">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Practicar</p><h2 class="h-xl">Herramientas para dejar de pelearte</h2><p class="lead">¿Cómo me hablo y cómo corto el círculo?</p></div>
+    <svg class="art" role="img" aria-label="Un globo de diálogo con un corazón"><use href="#art-speech"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 22 Herramientas -->
+<section class="panel t-sand alt" id="herr" data-act="practicar" data-title="Tres herramientas de coaching">
+  <div class="pin"><div class="in"><div class="cols art-first">
+    <svg class="art sm" role="img" aria-label="Un globo de diálogo con un corazón"><use href="#art-speech"/></svg>
+    <div class="stack">
+      <div class="tabs" role="tablist" aria-label="Herramientas" id="tabs">
+        <button class="tab" role="tab" type="button" id="tab-0" aria-controls="tp-0" aria-selected="true">Ver el patrón</button>
+        <button class="tab" role="tab" type="button" id="tab-1" aria-controls="tp-1" aria-selected="false" tabindex="-1">Carta a una amiga</button>
+        <button class="tab" role="tab" type="button" id="tab-2" aria-controls="tp-2" aria-selected="false" tabindex="-1">Tu valor, aparte</button>
+      </div>
+      <div class="card tabpanel" role="tabpanel" id="tp-0" aria-labelledby="tab-0">
+        <h3>Todo castigo tiene cuatro piezas</h3>
+        <div class="grid2">
+          <p><b>Situación</b><br><span class="sub">Un cumpleaños con torta</span></p>
+          <p><b>Pensamiento</b><br><span class="sub">“Soy un desastre”</span></p>
+          <p><b>Emoción</b><br><span class="sub">Culpa y vergüenza</span></p>
+          <p><b>Acción</b><br><span class="sub">Saltear la cena</span></p>
+        </div>
+      </div>
+      <div class="card tabpanel" role="tabpanel" id="tp-1" aria-labelledby="tab-1" hidden>
+        <h3>¿Se lo diría a una amiga?</h3>
+        <p>Escribí tu frase de castigo y reescribila como se lo dirías a ella.</p>
+        <p class="sub">Es privado: no se comparte ni se corrige.</p>
+      </div>
+      <div class="card tabpanel" role="tabpanel" id="tp-2" aria-labelledby="tab-2" hidden>
+        <h3>Tu valor no depende de tu talle</h3>
+        <p>¿Qué cualidades tuyas no tienen nada que ver con tu cuerpo? Escribí tres.</p>
+      </div>
+    </div>
+  </div></div></div>
+</section>
+
+
+
+<!-- 24 Semana -->
+<section class="panel t-blush alt" id="semana" data-act="practicar" data-title="Una acción para esta semana">
+  <div class="pin"><div class="in">
+    <p class="kicker">Elegí una sola acción para esta semana</p>
+    <div class="grid3 big-cards">
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-plate"/></svg><p>Una comida sin culpa, sentada y sin compensar</p><p class="sub">Una vez en la semana</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-people"/></svg><p>Una salida que venías evitando</p><p class="sub">Una vez en la semana</p></div>
+      <div class="card"><svg class="ic" aria-hidden="true"><use href="#ic-heart"/></svg><p>Releer tu frase nueva cuando aparezca el castigo</p><p class="sub">Todos los días</p></div>
+    </div>
+    <p class="quote" style="text-align:center">Podés hablarte distinto.</p>
+  </div></div>
+</section>
+
+<!-- 25 Título: movimiento -->
+<section class="panel t-gold" id="t-mov" data-act="practicar" data-title="Moverme desde el cuidado">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack"><p class="kicker">Practicar</p><h2 class="h-xl">Moverme desde el cuidado</h2><p class="lead">¿Para qué me muevo?</p></div>
+    <svg class="art" role="img" aria-label="Un corazón con una línea de pulso"><use href="#art-heart"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 26 Movimiento -->
+<section class="panel t-sand alt" id="mov" data-act="practicar" data-title="Entrenar como castigo o como cuidado">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack">
+      <div class="seg" role="group" aria-label="Forma de entrenar"><button type="button" id="mvA" aria-pressed="true">Como castigo</button><button type="button" id="mvB" aria-pressed="false">Como cuidado</button></div>
+      <div class="grid2" id="mvRows"></div>
+    </div>
+    <svg class="art sm" id="mvArt" role="img" aria-label="Ilustración"><use href="#art-bolt" id="mvUse"/></svg>
+  </div>
+  <div class="cloud"><p class="cl-t">Revisá tu diálogo interno: cómo te hablas y te tratas</p><p class="cl-s">Si eso no cambia, es muy difícil que llegues realmente a aceptarte.</p></div>
+  </div></div>
+</section>
+
+<!-- 27 Fuerza -->
+<section class="panel t-blush" id="fuerza" data-act="practicar" data-title="Beneficios del entrenamiento de fuerza">
+  <div class="pin"><div class="in fz">
+    <p class="kicker">Entrenar desde el cuidado</p>
+    <h2 class="h-xl" style="font-size:clamp(2rem,3.6vw,3.2rem);max-width:none">Beneficios del entrenamiento de fuerza</h2>
+    <div class="grid4">
+      <div class="card">
+        <svg class="pic" viewBox="0 0 160 160" role="img" aria-label="Un hueso con un escudo"><circle cx="80" cy="80" r="76" fill="#F0D9CF"/><g class="breath"><circle cx="80" cy="80" r="58" fill="none" stroke="#9A86A4" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/></g><g class="float" transform="rotate(-35 80 80)"><rect x="38" y="70" width="84" height="20" rx="8" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5"/><circle cx="36" cy="68" r="13" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5"/><circle cx="36" cy="92" r="13" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5"/><circle cx="124" cy="68" r="13" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5"/><circle cx="124" cy="92" r="13" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5"/><rect x="40" y="72" width="80" height="16" rx="6" fill="#FDF8F0"/></g><g class="pulse"><path d="M118 26l16 6v14c0 12-8 20-16 24c-8-4-16-12-16-24V32z" fill="#E3B96A" stroke="#A98C57" stroke-width="4" stroke-linejoin="round"/></g></svg>
+        <h3>Huesos y músculos fuertes</h3><p>Cuidan tu cuerpo hoy y a lo largo de los años.</p>
+      </div>
+      <div class="card">
+        <svg class="pic" viewBox="0 0 160 160" role="img" aria-label="Una batería cargada con un rayo"><circle cx="80" cy="80" r="76" fill="#F0D9CF"/><g class="spin"><circle cx="80" cy="80" r="62" fill="none" stroke="#9A86A4" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round"/></g><rect x="36" y="52" width="82" height="56" rx="14" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5"/><rect x="122" y="70" width="9" height="20" rx="4" fill="#4E3C47"/><rect x="44" y="60" width="66" height="40" rx="8" fill="#9A86A4" opacity=".35"/><g class="pulse"><path d="M84 46L62 84h18l-6 30l28-40H84z" fill="#E3B96A" stroke="#A98C57" stroke-width="4" stroke-linejoin="round"/></g></svg>
+        <h3>Más energía y mejor descanso</h3><p>Te sentís con más fuerza para tu día.</p>
+      </div>
+      <div class="card">
+        <svg class="pic" viewBox="0 0 160 160" role="img" aria-label="Un sol saliendo detrás de una nube"><circle cx="80" cy="80" r="76" fill="#F0D9CF"/><g class="breath"><circle cx="80" cy="72" r="42" fill="#E3B96A" opacity=".3"/></g><g class="spin"><g stroke="#C9AE7C" stroke-width="6" stroke-linecap="round"><path d="M80 14v14M80 116v14M14 72h14M132 72h14M33 25l10 10M117 109l10 10M127 25l-10 10M43 109l-10 10"/></g></g><circle cx="80" cy="72" r="28" fill="#E3B96A" stroke="#A98C57" stroke-width="4"/><g class="float"><path d="M44 118a20 20 0 0 1 4-38a26 26 0 0 1 48-4a22 22 0 0 1 20 42z" fill="#FDF8F0" stroke="#4E3C47" stroke-width="5" stroke-linejoin="round"/><path d="M70 104c4 6 14 6 18 0" fill="none" stroke="#9A86A4" stroke-width="4" stroke-linecap="round"/></g></svg>
+        <h3>Mejor ánimo, menos estrés</h3><p>El movimiento también cuida tu cabeza.</p>
+      </div>
+      <div class="card">
+        <svg class="pic" viewBox="0 0 160 160" role="img" aria-label="Una pesa rusa con destellos"><circle cx="80" cy="80" r="76" fill="#F0D9CF"/><g class="float"><path d="M56 70a24 24 0 0 1 48 0" fill="none" stroke="#4E3C47" stroke-width="10" stroke-linecap="round"/><circle cx="80" cy="100" r="34" fill="#9A86A4" stroke="#4E3C47" stroke-width="5"/><ellipse cx="68" cy="88" rx="9" ry="6" fill="#FDF8F0" opacity=".6" transform="rotate(-30 68 88)"/></g><g class="twinkle"><path d="M130 36l4 10l10 4l-10 4l-4 10l-4-10l-10-4l10-4z" fill="#E3B96A"/></g><g class="twinkle" style="animation-delay:-1.2s"><path d="M30 44l3 7l7 3l-7 3l-3 7l-3-7l-7-3l7-3z" fill="#E3B96A"/></g></svg>
+        <h3>Más confianza en vos</h3><p>Descubrís todo lo que tu cuerpo es capaz de hacer.</p>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 28 Título: hoy -->
+<section class="panel t-cocoa alt" id="t-hoy" data-act="elegir" data-title="Hoy">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack">
+      <p class="kicker">Elegir</p>
+      <p class="big hoy">Hoy…</p>
+      <p class="quote">Que nutrirte no sea el precio que pagás para poder disfrutar.</p>
+      <p class="lead">Merecés disfrutar hoy, no cuando cambies.</p>
+    </div>
+    <svg class="art" role="img" aria-label="Un sol saliendo en el horizonte"><use href="#art-sun"/></svg>
+  </div></div></div>
+</section>
+
+<!-- 29 Invitación -->
+<section class="panel t-cream" id="invitacion" data-act="elegir" data-title="Una invitación">
+  <div class="pin"><div class="in"><div class="cols">
+    <div class="stack">
+      <p class="kicker">Una invitación</p>
+      <h2 class="h-md">Este camino se hace mejor acompañada</h2>
+      <p class="lead" style="max-width:36ch">Un espacio para entrenar, nutrirte y trabajar la relación con vos misma, junto a otras mujeres. Sin juicio y a tu ritmo.</p>
+      <div class="chips"><span class="chip">Entrenamiento</span><span class="chip">Nutrición</span><span class="chip">Coaching</span><span class="chip">Comunidad</span></div>
+      <div class="brandblock"><p class="big" style="font-size:clamp(2.6rem,5vw,4.4rem)">DVOLVE</p><p class="lead" style="font-weight:700;color:var(--accent)">@dvolve.ar</p></div>
+    </div>
+    <svg class="art" role="img" aria-label="Un plato en el centro rodeado de un círculo de mujeres"><use href="#art-community"/></svg>
+  </div></div></div>
+</section>
+
+</main>
+<aside class="notes" id="notes" hidden aria-label="Mis notas"></aside>
+<div class="prog" id="prog"></div>
+</div>
+
+<footer class="foot">
+  <button class="nbtn" type="button" id="prev" aria-label="Anterior">↑</button>
+  <div class="acts" id="acts">
+    <button class="act" type="button" data-act="inicio">Inicio</button>
+    <button class="act" type="button" data-act="reconocer">Reconocer</button>
+    <button class="act" type="button" data-act="entender">Entender</button>
+    <button class="act" type="button" data-act="practicar">Practicar</button>
+    <button class="act" type="button" data-act="elegir">Elegir</button>
+  </div>
+  <button class="nbtn" type="button" id="next" aria-label="Siguiente">↓</button>
+  <span class="count" id="count">1 / 30</span>
+  <button class="noteb" type="button" id="notesBtn" aria-pressed="false">Notas</button>
+</footer>
+</div>
+</div></div>
+
+<script>
+(function(){
+function $(s,r){return (r||document).querySelector(s)}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+/* Escala el lienzo 16:9 para que entre completo en la ventana */
+var vp=$('#vp'), canvas=$('#canvas');
+function fit(){ var s=Math.min(vp.clientWidth/720, vp.clientHeight/1280); if(!(s>0)) s=1; canvas.style.setProperty('--s', s.toFixed(4)); }
+fit(); window.addEventListener('resize',fit);
+var rail=$('#rail'), panels=$$('.panel'), N=panels.length, cur=0;
+var reduce=false; try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+var count=$('#count'), notesBox=$('#notes'), notesBtn=$('#notesBtn'), prog=$('#prog');
+
+var NOTES={
+cover:["Bienvenida (1 min): presentarnos y contar por qué armamos esta charla. Preguntar por qué están ahí.","Aclarar el tono: hoy no hablamos de dietas ni de planes. Hablamos de la relación de cada una con la comida y con su cuerpo.","Nadie tiene que hablar en público: participan levantando la mano, escribiendo o pensando.","Quiénes están: Lourdes conduce el hilo, las dinámicas y las herramientas de coaching. Trini, nutricionista, aporta la información nutricional y responde dudas."],
+lema:["El lema aparece tres veces: ahora como promesa, después del bloque de Trini y al cierre. Decilo despacio.","Anunciar el recorrido (30 seg): “Vamos a hacer este camino en tres partes. Primero vamos a reconocer lo que nos pasa. Después, con Trini, vamos a entender qué necesita el cuerpo. Y al final vamos a practicar herramientas y a elegir qué hacemos con todo esto.”","La charla parte de una escena que se repite mucho: muchas mujeres esperan tener el cuerpo ideal para recién ahí permitirse disfrutar. Hoy miramos esa espera, entendemos qué hay detrás y nos llevamos herramientas para dejar de pelearnos con la comida."],
+vosi:["Preguntá con la mano: ¿a quién le pasa alguna de estas?","Son las cuatro escenas: vivir peleada con el físico, castigarse con la comida y sentir que se vale menos, dejar de vivir, de salir y de disfrutar por la mirada ajena, y esperar “llegar” a un cuerpo para empezar a vivir."],
+"t-espera":["Bloque 1 · 6 min. Objetivo: que se sientan vistas desde el primer minuto y que nombren, aunque sea en silencio, lo que están esperando."],
+espera:["Leé las frases con “Otra frase” y hacé ronda de manos: ¿a quién le pasa?","Frases: cuando baje de peso me animo a ir a la playa; cuando tenga este físico me saco fotos; cuando esté 100% conforme me compro ropa que me guste; cuando llegue salgo con amigas, bailo; ahí sí disfruto de comer.","Contá que en el medio de esa espera la vida se achica: se evitan lugares, se esconde el cuerpo y la comida se vuelve una fuente de culpa."],
+pensar:["Dejá unos segundos de silencio entre pregunta y pregunta.","Participación: que escriban en una hoja o en el celular, sin compartir: “Cuando ___, voy a ___”. Que guarden esa hoja, la van a necesitar en la vida en pausa."],
+"t-pelea":["Bloque 2 · 8 min. Objetivo: que entiendan que la pelea con la comida es un patrón con explicación, no una falta de voluntad.","Entrada: “Mientras esperamos ese cuerpo, la comida se convierte en un campo de batalla. Y casi siempre se repite el mismo círculo.”","Cuando una se pelea con la comida se dice “no tengo fuerza de voluntad”, “no me puedo controlar”, “soy un desastre”. Eso no es verdad: es un patrón. Un patrón se repite siempre en el mismo orden, y por eso se puede ver, entender y cortar."],
+pelea:["Recorré los cinco pasos con un ejemplo cotidiano: el cumpleaños de una amiga, la torta y el lunes.","1 Restricción: “desde hoy, nada de esto”. 2 Hambre y ansiedad: el cuerpo pide lo que le falta. 3 Descontrol: se come rápido, de más o a escondidas. 4 Culpa: “soy un desastre”. 5 Castigo: saltear comidas, entrenar de más, “el lunes empiezo”. Y vuelve el paso 1.","Aclarar: el descontrol no nace del carácter, nace de la restricción previa. Trini lo explica enseguida."],
+descontrol:["Comida como premio o castigo: “me lo gané” la vuelve premio, “no me lo merezco” la vuelve castigo, “hoy me porté bien o mal” habla de moral y no de hambre. En todos los casos tu valor queda atado a lo que comiste. Ahí aparece el precio: disfrutar se paga, con hambre, con culpa o con entrenamiento de más.","Para pensar: ¿qué te decís después de comer algo que “no deberías”? ¿Cómo te hace sentir esa voz? ¿Quién te enseñó que había comidas buenas y malas? ¿Qué te daría miedo que pase si te permitieras comer sin reglas?","Idea: no fallaste vos, un sistema te enseñó a comer con miedo. Pero quedarte solo como víctima te achica y te saca el poder de cambiarlo.","Puente: “Esta pelea nos cuesta mucho más que comida. Nos cuesta vida, momentos compartidos.”"],
+"t-pausa":["Bloque 3 · 7 min. Objetivo: que vean cuánto dejan en pausa mientras esperan un cuerpo “aprobado” o “el momento ideal”."],
+hoy:["Participación: que tomen la hoja del primer bloque. Tres pasos: releer la frase “Cuando ___, voy a ___”, tachar el “cuando” y escribir arriba “hoy”, y pensar la versión más chica de esa acción para esta semana. Mientras, tachá el “cuando” en pantalla.","Historia de coaching (anonimizada, real o armada con varias historias): una mujer que evitó tres años las vacaciones familiares “hasta estar mejor”. Su cuerpo no cambió como esperaba y perdió tres veranos con su familia. La moraleja no es “aceptate ya”: es que esperar tiene un costo.","Para pensar: ¿qué dejaste de vivir por esperar? ¿Qué sentís al pensar en todo el tiempo que pasó? Si no hubiera que esperar, ¿qué sería lo primero que harías?"],
+mirada:["Lo que se posterga: ir a la playa o a la pileta, sacarse fotos y aparecer en ellas, comprarse ropa que les guste en vez de ropa que tape, bailar, animarse a una cita o a una relación, ir a un cumpleaños sin esconderse, comer en público sin sentirse juzgada.","Detrás, la mirada de los demás: entrar a un lugar y revisar quién mira, elegir la ropa para tapar y no para disfrutar, compararse con otras en cada reunión, sentir que cada comentario sobre el cuerpo confirma lo peor.","Puente: “Para dejar de esperar tenemos que entender qué necesita de verdad tu cuerpo. Le paso la palabra a Trini.”"],
+"t-cuerpo":["Bloque de Trini · 12 min. Objetivo: explicar por qué la restricción no funciona y devolverles la confianza en su cuerpo.","Trini se presenta (1 min) y aclara que hoy no da planes, porciones ni cifras, porque eso se define en una consulta personal."],
+necesita:["Por qué pasa el ciclo, fisiológicamente: aparece ante restricción rígida, reglas estrictas, prohibiciones, pensamiento de todo o nada, comidas insuficientes o salteadas (no hablamos de un déficit calórico bien planificado).","Restricción: “no como pan”, “hoy me salteo el desayuno porque ayer me pasé”. Hambre: sube la grelina y aumenta el apetito; aparecen cansancio, mal humor y pensamiento constante en comida; lo prohibido ocupa más lugar en la cabeza. Descontrol: “ya rompí la dieta, sigo”. Culpa: se vive como falla personal y no como consecuencia de un esquema demasiado rígido. Nueva restricción: más fuerte, y vuelve al principio.","Herramientas para cortar el ciclo: no compensar salteando comidas ni entrenando más; no pasar muchas horas sin comer; sacar prohibiciones absolutas y trabajar frecuencia, cantidad y contexto; detectar el todo o nada; bajar la exigencia; revisar si el déficit es demasiado agresivo; planificar flexibilidad (ej.: el chocolate en una merienda con yogur, para no desbordarse el finde); pedir ayuda a un profesional.","Frase para anclar: “Tu cuerpo no negocia. Te pide lo que necesita, y no tenés que ganártelo.” Después de este bloque, decí el lema por segunda vez."],
+mito:["4 min. Leé cada frase. Mano derecha si creen que es verdad, izquierda si creen que es mito. Después tocá “Ver respuesta” y responde Trini. Las cuatro son mitos.","Buenos y malos: importan frecuencia, cantidad y contexto. La culpa aparece por el significado aprendido, construido en años de cultura de dieta.","Compensar: dispara el próximo descontrol. Se vuelve a comer normal en la próxima comida.","El lunes: no hace falta empezar de cero, una comida o un fin de semana distinto no borra el progreso.","Disfrutar: permitirse baja la intensidad y la ansiedad; prohibir la sube.","Papelitos o chat anónimo (1 min): una duda sobre comida que da vergüenza preguntar. Trini las responde al final."],
+"t-plato":["Bloque de Trini · 10 min. Objetivo: que se lleven herramientas simples de nutrición para aplicar.","No hay un único plato correcto. Se adapta a gustos, horarios, presupuesto y cultura. La idea es elegir desde lo que el cuerpo necesita, con flexibilidad y con permiso para disfrutar."],
+sincastigo:["No saltearse comidas: comer con cierta regularidad baja la ansiedad y reduce los atracones.","Placer todos los días: el disfrute no es solo del fin de semana. Un postre, un café con algo rico o una comida que te encanta pueden estar en un día común. Incluirlos con permiso suele bajar la ansiedad con esos alimentos.","Frenar el reseteo del lunes: después de un día de comer “mal”, la próxima comida es normal. No hay nada que pagar."],
+"t-eventos":["Es el momento donde sentimos que arruinamos lo que estábamos construyendo."],
+eventos:["Texto completo: llegar con hambre moderada, no con hambre extrema; elegir lo que más se disfruta, no lo que “corresponde”; comer sentada, con calma.","Además: hacer las comidas previas completas, sin saltearlas; hidratarse bien, porque la sed se confunde con hambre; elegir conscientemente lo que realmente querés.","Apoyar los cubiertos y servirte en un plato para estar más consciente; comer despacio, estando presente; mirar a las personas de frente y conectar con ellas.","Elegí una buena fuente de proteína: ayuda a estar más saciada."],
+"t-voz":["Bloque 6 · 9 min. Objetivo: darles herramientas concretas de coaching para cortar la voz del castigo.","Entrada: “Trini nos contó qué necesita el cuerpo. Ahora vamos a trabajar la voz que nos habla mientras comemos.”"],
+herr:["Herramienta 1, ver el patrón (2 min): situación, pensamiento, emoción y acción. Ejemplo: un cumpleaños con torta, “soy un desastre, no me puedo controlar”, culpa y vergüenza, saltear la cena y entrenar de más. Que piensen en una situación reciente y la anoten en las cuatro piezas.","Herramienta 2, la carta a una amiga (3 min): escribí la frase de castigo que más te decís, preguntate si se la dirías a una amiga, reescribila como se lo dirías a ella, leela en voz baja una vez y sacale una foto o guardala en el celular. Avisá que es privado: no se comparte ni se corrige. Hacé hincapié en: “Hoy hago lo mejor que puedo con lo que tengo” y “Mi cuerpo me lleva a todos lados. Merece cuidado, no castigo.”","Herramienta 3, separar tu valor de tu cuerpo: tu valor no depende de tu talle ni de lo que comiste. ¿Qué cualidades mías no tienen nada que ver con mi cuerpo? Escribir tres y releerlas cuando aparezca el castigo.","Para pensar: ¿qué le dirías a una amiga que se habla como vos? ¿Qué cambiaría en tu día si te hablaras así? ¿Qué te cuesta más de tratarte con amabilidad?"],
+semana:["Ejercicio: plan de 7 días. Pedí que elijan una sola acción para empezar y la anoten en el celular con recordatorio.","Opciones: una comida sin culpa (sentada, sin pantallas y sin compensar) una vez en la semana; una salida que venían evitando por cómo se ven, una vez en la semana; releer la frase nueva cuando aparezca el castigo, todos los días.","Frase para anclar: “Podés hablarte distinto.” Puente: “Y el cuerpo también se cuida en movimiento. Veamos para qué nos movemos.”"],
+"t-mov":["Bloque a cargo de Trini (duración a definir; en la agenda original eran 4 min). Objetivo: cambiar el motivo por el que se mueven, de “pagar lo que comí” a “sentirme fuerte, con energía y en paz con mi cuerpo”."],
+mov:["Entrenar como castigo es el mismo círculo de la pelea con la comida, ahora con zapatillas.","Castigo: “tengo que quemar lo de ayer”, se mide en calorías y balanza, si faltás hay culpa, se vive como obligación. Cuidado: “quiero sentirme fuerte hoy”, se mide en energía, fuerza, constancia y ánimo, si faltás retomás sin drama, se vive como un espacio propio.","Para pensar: ¿para qué entrenás? ¿Cómo querés sentirte en tu cuerpo, más allá de cómo se ve? ¿Qué movimiento hacías de chica que disfrutabas y dejaste de hacer?"],
+fuerza:["Bloque de DVOLVE: el entrenamiento también es parte de cuidarse. Entrenar fuerza no es para compensar lo que comí: es para sentirme capaz.","Beneficios para contar: huesos y músculos más fuertes; más energía y mejor descanso; mejor ánimo y menos estrés; más confianza al ver lo que el cuerpo puede hacer. Podés sumar otros que quieras (salud metabólica, autonomía, postura).","Para pensar: ¿qué te gustaría poder hacer con tu cuerpo dentro de seis meses, más allá de cómo se ve? Puente: “Y ahora, volvamos al hoy.”"],
+"t-hoy":["Volver al principio (1 min): el “cuando” tachado ahora dice “hoy”. Recordar el recorrido en una frase: reconocimos lo que nos pasa, entendimos qué necesita el cuerpo y practicamos cómo hablarnos.","Decí el lema por tercera vez, despacio. Cerrá con: “Merecés disfrutar hoy, no cuando cambies.”","Para pensar: ¿cuál es el primer paso chico que elegís esta semana? ¿Qué te gustaría poder decir dentro de un mes? ¿A quién le querés contar lo que te llevás de hoy?"],
+invitacion:["Por qué hace falta una comunidad: cambiar sola es mucho más difícil, compartir con otras que viven lo mismo saca la vergüenza y un espacio sin juicio ayuda a sostener los cambios.","Qué es DVOLVE: entrenamiento a tu medida para sentirte fuerte y con energía; nutrición con acompañamiento profesional de Trini, sin dietas de castigo; coaching sobre la relación con vos misma y con tu cuerpo; comunidad, un espacio para ir juntas sin juicio.","Cómo sumarse: un primer paso de bajo compromiso, unirse a la comunidad o agendar una consulta inicial. Invitá, no vendas."],
+};
+
+var acts=$$('.act');
+function actOf(i){return panels[i].getAttribute('data-act')}
+function firstOf(a){for(var i=0;i<N;i++){if(actOf(i)===a) return i} return 0}
+function goTo(i){ i=Math.max(0,Math.min(N-1,i)); rail.scrollTo({top:i*rail.clientHeight,behavior:reduce?'auto':'smooth'}); }
+acts.forEach(function(b){ b.addEventListener('click',function(){goTo(firstOf(b.getAttribute('data-act')))}); });
+function renderNotes(){
+  while(notesBox.firstChild) notesBox.removeChild(notesBox.firstChild);
+  var h=document.createElement('h3'); h.textContent='Mis notas · '+panels[cur].getAttribute('data-title'); notesBox.appendChild(h);
+  var ul=document.createElement('ul'); var list=NOTES[panels[cur].id]||[];
+  list.forEach(function(t){var li=document.createElement('li'); li.textContent=t; ul.appendChild(li)});
+  notesBox.appendChild(ul);
+}
+function render(){
+  var a=actOf(cur);
+  acts.forEach(function(b){ if(b.getAttribute('data-act')===a) b.setAttribute('aria-current','true'); else b.removeAttribute('aria-current'); });
+  count.textContent=(cur+1)+' / '+N;
+  $('#prev').disabled=(cur===0); $('#next').disabled=(cur===N-1);
+  prog.style.width=((cur+1)/N*100)+'%';
+  renderNotes();
+}
+var raf=0;
+rail.addEventListener('scroll',function(){ cancelAnimationFrame(raf); raf=requestAnimationFrame(function(){ var i=Math.round(rail.scrollTop/rail.clientHeight); if(i!==cur){cur=i;render();} }); });
+window.addEventListener('resize',function(){ rail.scrollTo({top:cur*rail.clientHeight,behavior:'auto'}); });
+$('#prev').addEventListener('click',function(){goTo(cur-1)});
+$('#next').addEventListener('click',function(){goTo(cur+1)});
+$$('[data-next]').forEach(function(b){b.addEventListener('click',function(){goTo(cur+1)})});
+function toggleNotes(){ var on=notesBox.hidden; notesBox.hidden=!on; notesBtn.setAttribute('aria-pressed',on?'true':'false'); }
+notesBtn.addEventListener('click',toggleNotes);
+document.addEventListener('keydown',function(e){
+  var t=e.target; if(t&&(/^(input|textarea|select)$/i.test(t.tagName)||t.isContentEditable)) return;
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(t&&t.closest&&t.closest('[role="tablist"]')) return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();goTo(cur+1)}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();goTo(cur-1)}
+  else if(e.key==='n'||e.key==='N'){toggleNotes()}
+  else if(e.key==='Escape'&&!notesBox.hidden){toggleNotes()}
+});
+
+/* Frases del cuando */
+var PH=["Cuando baje de peso, me voy a animar a ir a la playa.","Cuando tenga este físico, me voy a sacar fotos.","Cuando esté 100% conforme, voy a comprarme ropa que me guste.","Cuando llegue, voy a salir con amigas, a bailar.","Ahí sí voy a disfrutar de comer."];
+var pi=0, phrase=$('#phrase'), pd=$('#pdots');
+PH.forEach(function(){pd.appendChild(document.createElement('i'))});
+function showPhrase(){ phrase.textContent=PH[pi]; $$('i',pd).forEach(function(d,k){d.className=(k===pi)?'on':''}); }
+$('#phraseBtn').addEventListener('click',function(){pi=(pi+1)%PH.length;showPhrase()});
+showPhrase();
+
+/* Círculo de cinco pasos */
+var STEPS=[["Restricción","Desde hoy, nada de esto."],["Hambre y ansiedad","El cuerpo pide lo que le falta."],["Descontrol","Se come rápido, de más o a escondidas."],["Culpa","“Soy un desastre, no tengo fuerza de voluntad.”"],["Castigo","Saltear comidas, entrenar de más.","“El lunes empiezo.” Y vuelve el paso 1."]];
+var step=0, rb=$('#ringbox'), nodes=[];
+STEPS.forEach(function(s,i){
+  var a=(-90+i*72)*Math.PI/180, b=document.createElement('button');
+  b.type='button'; b.className='node'; b.textContent=String(i+1);
+  b.style.left=(50+38*Math.cos(a))+'%'; b.style.top=(50+38*Math.sin(a))+'%';
+  b.setAttribute('aria-label','Paso '+(i+1)+': '+s[0]);
+  b.addEventListener('click',function(){setStep(i)});
+  rb.appendChild(b); nodes.push(b);
+});
+function setStep(i){ step=i; nodes.forEach(function(n,k){n.setAttribute('aria-pressed',k===i?'true':'false')}); $('#stepNum').textContent='Paso '+(i+1); $('#stepTitle').textContent=STEPS[i][0]; $('#stepText').textContent=STEPS[i][1]; $('#stepFoot').textContent=STEPS[i][2]||''; }
+$('#stepNext').addEventListener('click',function(){setStep((step+1)%STEPS.length)});
+setStep(0);
+
+/* Cuando → Hoy */
+var hoyOn=false;
+$('#hoyBtn').addEventListener('click',function(){
+  hoyOn=!hoyOn;
+  $('#cuandoLine').classList.toggle('struck',hoyOn);
+  $('#hoyLine').hidden=!hoyOn; $('#turn').hidden=!hoyOn;
+  this.setAttribute('aria-pressed',hoyOn?'true':'false');
+  this.textContent=hoyOn?'Volver al “cuando”':'Tachar el “cuando”';
+});
+
+/* Mito o verdad */
+var MITOS=[["Hay alimentos buenos y alimentos malos.","Mito. Importan la frecuencia, la cantidad y el contexto."],["Si me paso, al otro día compenso.","Mito. Compensar dispara el próximo descontrol. Volvé a comer normal en la próxima comida."],["El lunes empiezo de cero.","Mito. Una comida o un fin de semana no borra lo que venías haciendo."],["Si disfruto, pierdo el control.","Mito. Permitirte comer lo que te gusta baja la ansiedad. Prohibir la sube."]];
+var mb=$('#mitoBox');
+MITOS.forEach(function(m){
+  var d=document.createElement('div'); d.className='mito-item';
+  var q=document.createElement('p'); q.className='q'; q.textContent='“'+m[0]+'”';
+  var btn=document.createElement('button'); btn.type='button'; btn.className='btn'; btn.textContent='Ver respuesta'; btn.setAttribute('aria-expanded','false');
+  var a=document.createElement('p'); a.className='a'; a.textContent=m[1]; a.hidden=true;
+  btn.addEventListener('click',function(){ var open=a.hidden; a.hidden=!open; btn.setAttribute('aria-expanded',open?'true':'false'); btn.textContent=open?'Ocultar':'Ver respuesta'; });
+  d.appendChild(q); d.appendChild(btn); d.appendChild(a); mb.appendChild(d);
+});
+
+/* Pestañas */
+var tabs=$$('#tabs .tab');
+function selTab(k,focus){ tabs.forEach(function(t,j){ var on=(j===k); t.setAttribute('aria-selected',on?'true':'false'); t.tabIndex=on?0:-1; $('#tp-'+j).hidden=!on; if(on&&focus) t.focus(); }); }
+tabs.forEach(function(t,k){
+  t.addEventListener('click',function(){selTab(k,false)});
+  t.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'){e.preventDefault();selTab((k+1)%tabs.length,true)}
+    else if(e.key==='ArrowLeft'){e.preventDefault();selTab((k+tabs.length-1)%tabs.length,true)}
+  });
+});
+
+/* Movimiento */
+var MV={A:[["Lo que me digo","“Tengo que quemar lo de ayer.”"],["Cómo se mide","Calorías y balanza"],["Si falto","Culpa"],["Cómo se vive","Como una obligación"]],B:[["Lo que me digo","“Quiero sentirme fuerte hoy.”"],["Cómo se mide","Energía, fuerza y ánimo"],["Si falto","Retomo sin drama"],["Cómo se vive","Como un espacio propio"]]};
+function renderMv(k){
+  var box=$('#mvRows'); while(box.firstChild) box.removeChild(box.firstChild);
+  MV[k].forEach(function(r){ var c=document.createElement('div'); c.className='card'; var h=document.createElement('h3'); h.textContent=r[0]; var p=document.createElement('p'); p.textContent=r[1]; c.appendChild(h); c.appendChild(p); box.appendChild(c); });
+  $('#mvA').setAttribute('aria-pressed',k==='A'?'true':'false'); $('#mvB').setAttribute('aria-pressed',k==='B'?'true':'false');
+  $('#mvUse').setAttribute('href',k==='A'?'#art-bolt':'#art-heart');
+}
+$('#mvA').addEventListener('click',function(){renderMv('A')});
+$('#mvB').addEventListener('click',function(){renderMv('B')});
+renderMv('A');
+
+render();
+try{ var hh=(location.hash||'').replace('#',''); for(var k=0;k<N;k++){ if(panels[k].id===hh&&k>0){ (function(kk){setTimeout(function(){goTo(kk)},0)})(k); } } }catch(e){}
+})();
+</script>
+
+</body></html>
