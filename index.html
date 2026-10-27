@@ -4007,9 +4007,30 @@
     }
   }
 
+  // Busca en la biblioteca el video/link del ejercicio por nombre (las plantillas y planes guardan copias,
+  // así que si el link se agregó después a la biblioteca, no llegaba a los planes).
+  function libraryMediaFor(name){
+    const key = normalizeExName(name);
+    if(!key) return null;
+    const lib = (STATE && STATE.exerciseLibrary) || {};
+    for(const cat of Object.keys(lib)){
+      for(const item of (lib[cat] || [])){
+        if(item && normalizeExName(item.name) === key && (item.ytUrl || item.videoUrl)) return item;
+      }
+    }
+    return null;
+  }
+
   function createExerciseCardEl(ex, onFieldChange, onRemove, onVideoUpload, mode){
     const card = document.createElement('div');
     card.className = 'exercise-card';
+    if(mode !== 'library' && ex && !ex.ytUrl){
+      const src = libraryMediaFor(ex.name);
+      if(src){
+        if(src.ytUrl) ex = Object.assign({}, ex, { ytUrl: src.ytUrl });
+        else if(!ex.videoUrl) ex = Object.assign({}, ex, { videoUrl: src.videoUrl, mediaIsVideo: src.mediaIsVideo });
+      }
+    }
     let mediaHtml;
     const ytEmbed = youtubeEmbedUrl(ex.ytUrl);
     if(ytEmbed){
