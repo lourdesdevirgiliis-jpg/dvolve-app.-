@@ -4034,7 +4034,7 @@
     let mediaHtml;
     const ytEmbed = youtubeEmbedUrl(ex.ytUrl);
     if(ytEmbed){
-      mediaHtml = `<iframe src="${ytEmbed}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      mediaHtml = `<iframe src="${ytEmbed}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
     } else if(ex.videoUrl && ex.mediaIsVideo === false){
       mediaHtml = `<img src="${ex.videoUrl}" alt="">`;
     } else if(ex.videoUrl){
@@ -4061,6 +4061,7 @@
         <input type="text" class="exercise-yt-input" placeholder="O pegá el link de YouTube" value="${escapeHtml(ex.ytUrl || '')}">
       </div>
       <span class="exercise-yt-label">Si subís un video Y pegás un link, se muestra el link de YouTube.</span>
+      ${ytEmbed ? `<a href="${ytEmbed.replace('/embed/','/watch?v=')}" target="_blank" rel="noopener" style="display:inline-block;margin:6px 0 0;font-size:0.85rem;color:var(--accent,#8a4b3d);">▶ Abrir en YouTube</a>` : ''}
       <div class="exercise-body">
         <h3 contenteditable="true" data-field="name">${ex.name}</h3>
         ${metaHtml}
@@ -5151,7 +5152,7 @@
       const ytEmbed = youtubeEmbedUrl(v.ytUrl);
       let mediaHtml;
       if(ytEmbed){
-        mediaHtml = `<iframe src="${ytEmbed}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        mediaHtml = `<iframe src="${ytEmbed}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
       } else if(v.videoUrl && v.mediaIsVideo === false){
         mediaHtml = `<img src="${v.videoUrl}" alt="">`;
       } else if(v.videoUrl){
